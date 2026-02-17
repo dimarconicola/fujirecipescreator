@@ -1,0 +1,58 @@
+{
+  "profile_id": "xtrans3",
+  "display_name": "X-Trans III",
+  "supported_params": {
+    "film_sim": [
+      "provia",
+      "velvia",
+      "astia",
+      "classic_chrome",
+      "acros",
+      "mono"
+    ],
+    "dynamic_range": ["dr100", "dr200", "dr400"],
+    "highlight": [-2, -1, 0, 1, 2, 3, 4],
+    "shadow": [-2, -1, 0, 1, 2, 3, 4],
+    "color": [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+    "wb": ["auto", "daylight", "shade", "tungsten", "fluorescent", "kelvin"],
+    "wb_kelvin": [2500, 10000],
+    "wb_shift": {
+      "a_b": [-9, 9],
+      "r_b": [-9, 9]
+    },
+    "chrome": ["off", "weak", "strong"],
+    "chrome_blue": ["off"],
+    "clarity": [0],
+    "sharpness": [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+    "noise_reduction": [-4, -3, -2, -1, 0, 1, 2, 3, 4],
+    "grain": ["off", "weak", "strong"],
+    "grain_size": ["small"]
+  },
+  "defaults": {
+    "film_sim": "provia",
+    "dynamic_range": "dr100",
+    "highlight": 0,
+    "shadow": 0,
+    "color": 0,
+    "chrome": "off",
+    "chrome_blue": "off",
+    "clarity": 0,
+    "sharpness": 0,
+    "noise_reduction": 0,
+    "grain": "off",
+    "grain_size": "small",
+    "wb": "auto",
+    "wb_kelvin": 5600,
+    "wb_shift": {
+      "a_b": 0,
+      "r_b": 0
+    }
+  },
+  "strength_scalars": {
+    "tone_curve": 1.03,
+    "chrome": 0.95,
+    "clarity": 1.0,
+    "nr": 1.05,
+    "grain": 0.95
+  }
+}

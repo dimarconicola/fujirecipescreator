@@ -1,0 +1,33 @@
+{
+  "image_id": "portrait_v1",
+  "title": "Portrait Photo of Woman Wearing Hat",
+  "description": "Portrait reference with skin tones and subtle background separation for color and white-balance evaluations.",
+  "license": "Pexels License",
+  "license_url": "https://www.pexels.com/license/",
+  "source_url": "https://www.pexels.com/photo/415829/",
+  "direct_asset_url": "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg",
+  "author": "Pexels creator (photo ID 415829)",
+  "required_attribution": "Not required by Pexels License; source link retained in credits.",
+  "capture_notes": "Portrait-oriented scene for skin tone behavior under recipe adjustments.",
+  "white_point_hint": "D65",
+  "exposure_hint": 0.0,
+  "sizes": {
+    "full": {
+      "path": "assets/images/full/portrait_v1.jpg",
+      "pixel_width": 5760,
+      "pixel_height": 5075
+    },
+    "preview": {
+      "path": "assets/images/preview/portrait_v1.jpg",
+      "pixel_width": 1600,
+      "pixel_height": 1409
+    }
+  },
+  "tags": [
+    "portrait",
+    "skin_tones",
+    "daylight",
+    "background_color"
+  ],
+  "approval_status": "approved"
+}

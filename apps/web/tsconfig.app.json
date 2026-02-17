@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@fuji/domain": ["../../packages/domain/src/index.ts"],
+      "@fuji/engine-webgl": ["../../packages/engine-webgl/src/index.ts"]
+    },
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"]
+  },
+  "include": ["src", "vite.config.ts"]
+}

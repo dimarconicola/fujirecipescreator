@@ -1,0 +1,582 @@
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from "react";
+import {
+  ApproxCpuRenderer,
+  ApproxWebglRenderer,
+} from "@fuji/engine-webgl";
+import type { Profile, RecipeParams } from "@fuji/domain";
+import type { CanonicalImage } from "../data/images";
+import { buildRenderCacheKey, RenderFrameCache } from "../renderCache";
+import { toApproxRenderParams } from "../renderParams";
+import type { CompareMode, ViewerTransform } from "../state/viewerStore";
+
+type ImageViewerProps = {
+  images: CanonicalImage[];
+  selectedImageId: string;
+  profileId: string;
+  profileStrengthScalars: Profile["strength_scalars"];
+  transform: ViewerTransform;
+  params: RecipeParams;
+  compareMode: CompareMode;
+  splitPosition: number;
+  onSelectImage: (imageId: string) => void;
+  onZoomBy: (factor: number) => void;
+  onSetPan: (offsetX: number, offsetY: number) => void;
+  onResetView: () => void;
+  onSetSplitPosition: (position: number) => void;
+  onRenderStatusChange?: (status: string) => void;
+  onRendererModeChange?: (mode: RendererMode) => void;
+};
+
+type DragState = {
+  mode: "pan" | "split";
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startOffsetX: number;
+  startOffsetY: number;
+};
+
+type RendererMode = "webgl2" | "cpu_fallback";
+type RendererAdapter = {
+  mode: RendererMode;
+  render: (
+    image: HTMLImageElement,
+    params: ReturnType<typeof toApproxRenderParams>,
+    options?: { resolutionScale?: number },
+  ) => void;
+};
+
+const rootStyle: CSSProperties = {
+  display: "grid",
+  gap: "8px",
+  alignContent: "start",
+  alignSelf: "start",
+};
+
+const tabsStyle: CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "6px",
+};
+
+const viewportStyle: CSSProperties = {
+  position: "relative",
+  height: "540px",
+  border: "1px solid #d8d8d8",
+  borderRadius: "12px",
+  overflow: "hidden",
+  backgroundColor: "#111",
+  touchAction: "none",
+};
+
+const layerStyleBase: CSSProperties = {
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  maxWidth: "none",
+  maxHeight: "none",
+  userSelect: "none",
+  pointerEvents: "none",
+};
+
+const tabButtonStyle: CSSProperties = {
+  border: "1px solid #d4d4d4",
+  borderRadius: "7px",
+  backgroundColor: "#fff",
+  padding: "4px",
+  display: "grid",
+  width: "72px",
+  height: "52px",
+  textAlign: "left",
+  overflow: "hidden",
+};
+
+const activeTabStyle: CSSProperties = {
+  ...tabButtonStyle,
+  borderColor: "#161616",
+  boxShadow: "0 0 0 1px #161616 inset",
+};
+
+const tabImageStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  borderRadius: "4px",
+};
+
+const splitDividerStyle: CSSProperties = {
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  width: "2px",
+  backgroundColor: "rgba(255,255,255,0.95)",
+  boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
+  cursor: "col-resize",
+  pointerEvents: "auto",
+};
+
+const zoomOverlayStyle: CSSProperties = {
+  position: "absolute",
+  left: "12px",
+  bottom: "12px",
+  zIndex: 6,
+  borderRadius: "999px",
+  border: "1px solid rgba(255,255,255,0.35)",
+  backgroundColor: "rgba(12, 12, 12, 0.74)",
+  color: "#ffffff",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "6px 8px",
+  transition: "opacity 120ms ease",
+};
+
+const zoomButtonStyle: CSSProperties = {
+  width: "28px",
+  height: "28px",
+  borderRadius: "999px",
+  border: "1px solid rgba(255,255,255,0.35)",
+  backgroundColor: "rgba(255,255,255,0.08)",
+  color: "#fff",
+  fontWeight: 700,
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+};
+
+const zoomResetButtonStyle: CSSProperties = {
+  ...zoomButtonStyle,
+  width: "auto",
+  padding: "0 10px",
+  fontWeight: 600,
+  fontSize: "12px",
+};
+
+const zoomLabelStyle: CSSProperties = {
+  minWidth: "52px",
+  textAlign: "center",
+  fontSize: "12px",
+  fontWeight: 600,
+};
+
+const INTERACTIVE_RESOLUTION_SCALE = 0.6;
+const SETTLE_RENDER_DELAY_MS = 260;
+
+type RenderQuality = "interactive" | "settle";
+
+function isFromViewerControls(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest('[data-viewer-controls="true"]') !== null;
+}
+
+export function ImageViewer({
+  images,
+  selectedImageId,
+  profileId,
+  profileStrengthScalars,
+  transform,
+  params,
+  compareMode,
+  splitPosition,
+  onSelectImage,
+  onZoomBy,
+  onSetPan,
+  onResetView,
+  onSetSplitPosition,
+  onRenderStatusChange,
+  onRendererModeChange,
+}: ImageViewerProps) {
+  const dragRef = useRef<DragState | null>(null);
+  const rendererRef = useRef<RendererAdapter | null>(null);
+  const renderCacheRef = useRef(new RenderFrameCache(32));
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
+  const [rendererError, setRendererError] = useState<string | null>(null);
+  const [rendererWarning, setRendererWarning] = useState<string | null>(null);
+  const [rendererMode, setRendererMode] = useState<RendererMode>("webgl2");
+  const [rendererReady, setRendererReady] = useState(0);
+  const [renderQuality, setRenderQuality] = useState<RenderQuality>("settle");
+  const [cachedFrameSrc, setCachedFrameSrc] = useState<string | null>(null);
+  const [isMouseHoveringViewer, setIsMouseHoveringViewer] = useState(false);
+  const [isBeforeHoldActive, setIsBeforeHoldActive] = useState(false);
+
+  const activeImage = useMemo(
+    () => images.find((image) => image.id === selectedImageId) ?? images[0],
+    [images, selectedImageId],
+  );
+  const activeImageId = activeImage?.id ?? selectedImageId;
+  const activeImageSource = activeImage?.previewSrc ?? "";
+
+  const transformedLayerStyle: CSSProperties = {
+    ...layerStyleBase,
+    transform: `translate(calc(-50% + ${transform.offsetX}px), calc(-50% + ${transform.offsetY}px)) scale(${transform.scale})`,
+    transformOrigin: "center center",
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+  };
+
+  useEffect(() => {
+    if (!activeImageSource) {
+      setSourceImage(null);
+      setCachedFrameSrc(null);
+      return;
+    }
+
+    setCachedFrameSrc(null);
+    let cancelled = false;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = activeImageSource;
+    image.onload = () => {
+      if (cancelled) {
+        return;
+      }
+      setSourceImage(image);
+      setRendererError(null);
+    };
+    image.onerror = () => {
+      if (cancelled) {
+        return;
+      }
+      setSourceImage(null);
+      setRendererError("Unable to load preview image");
+    };
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeImageSource]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    try {
+      const webglRenderer = new ApproxWebglRenderer(canvas);
+      rendererRef.current = {
+        mode: "webgl2",
+        render: webglRenderer.render.bind(webglRenderer),
+      };
+      setRendererMode("webgl2");
+      setRendererWarning(null);
+      setRendererError(null);
+      setRendererReady((current) => current + 1);
+    } catch (error) {
+      try {
+        const cpuRenderer = new ApproxCpuRenderer(canvas);
+        rendererRef.current = {
+          mode: "cpu_fallback",
+          render: cpuRenderer.render.bind(cpuRenderer),
+        };
+        setRendererMode("cpu_fallback");
+        setRendererWarning("WebGL2 unavailable. Using CPU fallback mode.");
+        setRendererError(null);
+        setRendererReady((current) => current + 1);
+      } catch (cpuError) {
+        const webglMessage =
+          error instanceof Error ? error.message : "WebGL2 renderer initialization failed";
+        const cpuMessage =
+          cpuError instanceof Error ? cpuError.message : "CPU renderer initialization failed";
+        rendererRef.current = null;
+        setRendererWarning(null);
+        setRendererError(`${webglMessage}; ${cpuMessage}`);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!sourceImage || !rendererRef.current) {
+      return;
+    }
+
+    const settleCacheKey = buildRenderCacheKey({
+      imageId: activeImageId,
+      profileId,
+      params,
+      mode: "settle",
+    });
+    const cachedSettleFrame = renderCacheRef.current.get(settleCacheKey);
+    if (cachedSettleFrame) {
+      setCachedFrameSrc(cachedSettleFrame.src);
+      setRendererError(null);
+      setRenderQuality("settle");
+      return;
+    }
+
+    setCachedFrameSrc(null);
+
+    const renderer = rendererRef.current;
+    const renderParams = toApproxRenderParams(params, profileStrengthScalars);
+    let cancelled = false;
+
+    const renderAtScale = (resolutionScale: number, quality: RenderQuality) => {
+      if (cancelled) {
+        return;
+      }
+
+      try {
+        renderer.render(sourceImage, renderParams, { resolutionScale });
+
+        if (quality === "settle" && canvasRef.current) {
+          const cachedSrc = canvasRef.current.toDataURL("image/png");
+          renderCacheRef.current.set(settleCacheKey, cachedSrc);
+        }
+
+        setRendererError(null);
+        setRenderQuality(quality);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Render failed";
+        setRendererError(message);
+      }
+    };
+
+    renderAtScale(INTERACTIVE_RESOLUTION_SCALE, "interactive");
+    const settleTimer = window.setTimeout(() => {
+      renderAtScale(1, "settle");
+    }, SETTLE_RENDER_DELAY_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(settleTimer);
+    };
+  }, [activeImageId, params, profileId, profileStrengthScalars, rendererReady, sourceImage]);
+
+  const handlePointerDownPan = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || isFromViewerControls(event.target)) {
+      return;
+    }
+
+    if (compareMode !== "split") {
+      setIsBeforeHoldActive(true);
+    }
+
+    if (transform.scale <= 1) {
+      return;
+    }
+
+    const target = event.currentTarget;
+    target.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      mode: "pan",
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startOffsetX: transform.offsetX,
+      startOffsetY: transform.offsetY,
+    };
+  };
+
+  const handlePointerDownSplit = (event: PointerEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      mode: "split",
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startOffsetX: transform.offsetX,
+      startOffsetY: transform.offsetY,
+    };
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const dragState = dragRef.current;
+
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (dragState.mode === "split") {
+      const viewportRect = event.currentTarget.getBoundingClientRect();
+      const position = (event.clientX - viewportRect.left) / viewportRect.width;
+      onSetSplitPosition(position);
+      return;
+    }
+
+    if (dragState.mode === "pan") {
+      const deltaX = event.clientX - dragState.startX;
+      const deltaY = event.clientY - dragState.startY;
+      onSetPan(dragState.startOffsetX + deltaX, dragState.startOffsetY + deltaY);
+    }
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    setIsBeforeHoldActive(false);
+    const dragState = dragRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    dragRef.current = null;
+  };
+
+  const isSplitMode = compareMode === "split";
+  const beforeLayerVisible = isSplitMode || isBeforeHoldActive;
+  const afterLayerVisible = isSplitMode || !isBeforeHoldActive;
+  const showCachedAfterLayer = afterLayerVisible && !rendererError && !!cachedFrameSrc;
+  const showRenderedAfterLayer = afterLayerVisible && !rendererError && !cachedFrameSrc;
+  const showFallbackAfterLayer = afterLayerVisible && !!rendererError;
+  const rendererModeLabel = rendererMode === "cpu_fallback" ? "CPU fallback" : "WebGL2";
+  const splitPercent = `${(splitPosition * 100).toFixed(2)}%`;
+  const renderStatusText = rendererError
+    ? `Render status: ${rendererError}. Showing fallback preview.`
+    : showCachedAfterLayer
+      ? `${rendererModeLabel}: restored settled frame from cache.`
+    : renderQuality === "interactive"
+      ? `${rendererModeLabel}: interactive preview (${Math.round(INTERACTIVE_RESOLUTION_SCALE * 100)}%).`
+      : `${rendererModeLabel}: settled full resolution.`;
+  const renderStatusWithWarning = rendererWarning
+    ? `${renderStatusText} ${rendererWarning}`
+    : renderStatusText;
+
+  const beforeLayerStyle: CSSProperties = {
+    ...transformedLayerStyle,
+    opacity: beforeLayerVisible ? 1 : 0,
+  };
+
+  const afterLayerStyle: CSSProperties = {
+    ...transformedLayerStyle,
+    opacity: afterLayerVisible ? 1 : 0,
+    clipPath: compareMode === "split" ? `inset(0 0 0 ${splitPercent})` : undefined,
+  };
+
+  useEffect(() => {
+    onRenderStatusChange?.(renderStatusWithWarning);
+  }, [onRenderStatusChange, renderStatusWithWarning]);
+
+  useEffect(() => {
+    onRendererModeChange?.(rendererMode);
+  }, [onRendererModeChange, rendererMode]);
+
+  if (!activeImage) {
+    return null;
+  }
+
+  return (
+    <section
+      style={rootStyle}
+      onMouseEnter={() => setIsMouseHoveringViewer(true)}
+      onMouseLeave={() => {
+        setIsMouseHoveringViewer(false);
+        setIsBeforeHoldActive(false);
+      }}
+    >
+      <div style={tabsStyle}>
+        {images.map((image) => {
+          const isActive = image.id === activeImage.id;
+          return (
+            <button
+              key={image.id}
+              type="button"
+              onClick={() => onSelectImage(image.id)}
+              style={isActive ? activeTabStyle : tabButtonStyle}
+              aria-label={image.title}
+            >
+              <img src={image.previewSrc} alt={image.title} style={tabImageStyle} />
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        style={viewportStyle}
+        data-testid="viewer-viewport"
+        onPointerDown={handlePointerDownPan}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={() => setIsBeforeHoldActive(false)}
+      >
+        {beforeLayerVisible ? (
+          <img
+            src={activeImage.previewSrc}
+            alt={activeImage.title}
+            style={beforeLayerStyle}
+            data-testid="viewer-before-layer"
+          />
+        ) : null}
+        <canvas
+          aria-label={`${activeImage.title} after render`}
+          ref={canvasRef}
+          data-testid="viewer-after-canvas"
+          style={{
+            ...afterLayerStyle,
+            opacity: showRenderedAfterLayer ? 1 : 0,
+          }}
+        />
+        {showCachedAfterLayer ? (
+          <img
+            src={cachedFrameSrc ?? undefined}
+            alt={`${activeImage.title} cached render`}
+            style={afterLayerStyle}
+          />
+        ) : null}
+        {showFallbackAfterLayer ? (
+          <img src={activeImage.previewSrc} alt={`${activeImage.title} fallback`} style={afterLayerStyle} />
+        ) : null}
+        {isSplitMode ? (
+          <div
+            style={{
+              ...splitDividerStyle,
+              left: splitPercent,
+            }}
+            data-testid="viewer-split-divider"
+            onPointerDown={handlePointerDownSplit}
+          />
+        ) : null}
+        <div
+          data-viewer-controls="true"
+          data-testid="viewer-zoom-controls"
+          style={{
+            ...zoomOverlayStyle,
+            opacity: isMouseHoveringViewer ? 1 : 0,
+            pointerEvents: isMouseHoveringViewer ? "auto" : "none",
+          }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            data-testid="viewer-zoom-in"
+            style={zoomButtonStyle}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => onZoomBy(1.1)}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            data-testid="viewer-zoom-out"
+            style={zoomButtonStyle}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => onZoomBy(0.9)}
+          >
+            -
+          </button>
+          <span style={zoomLabelStyle}>{transform.scale.toFixed(2)}x</span>
+          <button
+            type="button"
+            data-testid="viewer-zoom-reset"
+            style={zoomResetButtonStyle}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={onResetView}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

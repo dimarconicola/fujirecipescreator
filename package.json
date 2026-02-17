@@ -1,0 +1,25 @@
+{
+  "name": "fujirecipescreator",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm --workspace @fuji/web run dev",
+    "build": "npm run -ws --if-present build",
+    "typecheck": "npm run -ws --if-present typecheck",
+    "lint": "npm run -ws --if-present lint",
+    "test": "npm run -ws --if-present test",
+    "test:e2e": "playwright test",
+    "test:acceptance": "npm run test && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^22.13.1",
+    "jpeg-js": "^0.4.4",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

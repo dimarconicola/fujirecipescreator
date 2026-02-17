@@ -1,0 +1,34 @@
+{
+  "image_id": "night_v1",
+  "title": "Photo of Illuminated Street at Night",
+  "description": "Night urban scene with mixed artificial lighting and deep shadow regions for low-light parameter behavior checks.",
+  "license": "Pexels License",
+  "license_url": "https://www.pexels.com/license/",
+  "source_url": "https://www.pexels.com/photo/3075993/",
+  "direct_asset_url": "https://images.pexels.com/photos/3075993/pexels-photo-3075993.jpeg",
+  "author": "Pexels creator (photo ID 3075993)",
+  "required_attribution": "Not required by Pexels License; source link retained in credits.",
+  "capture_notes": "Low-light city reference image with highlight points and deep shadows.",
+  "white_point_hint": "Mixed artificial light",
+  "exposure_hint": 0.0,
+  "sizes": {
+    "full": {
+      "path": "assets/images/full/night_v1.jpg",
+      "pixel_width": 6000,
+      "pixel_height": 4000
+    },
+    "preview": {
+      "path": "assets/images/preview/night_v1.jpg",
+      "pixel_width": 1600,
+      "pixel_height": 1066
+    }
+  },
+  "tags": [
+    "night",
+    "city",
+    "low_light",
+    "artificial_lights",
+    "shadows"
+  ],
+  "approval_status": "approved"
+}

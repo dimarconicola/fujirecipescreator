@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "image_id": "landscape_v1",
+      "metadata_path": "assets/images/metadata/landscape_v1.json"
+    },
+    {
+      "image_id": "portrait_v1",
+      "metadata_path": "assets/images/metadata/portrait_v1.json"
+    },
+    {
+      "image_id": "night_v1",
+      "metadata_path": "assets/images/metadata/night_v1.json"
+    }
+  ]
+}

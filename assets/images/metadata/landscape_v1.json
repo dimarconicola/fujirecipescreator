@@ -1,0 +1,34 @@
+{
+  "image_id": "landscape_v1",
+  "title": "Landscape Picture",
+  "description": "Daylight landscape scene with sky, foliage, and textured natural details.",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "source_url": "https://commons.wikimedia.org/wiki/File:Landscape_Picture.jpg",
+  "direct_asset_url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Landscape_Picture.jpg",
+  "author": "Smith609",
+  "required_attribution": "Photo by Smith609 / Wikimedia Commons / CC BY-SA 4.0.",
+  "capture_notes": "Natural daylight landscape reference intended for sky-highlight and foliage-saturation behavior checks.",
+  "white_point_hint": "D65",
+  "exposure_hint": 0.0,
+  "sizes": {
+    "full": {
+      "path": "assets/images/full/landscape_v1.jpg",
+      "pixel_width": 4640,
+      "pixel_height": 3472
+    },
+    "preview": {
+      "path": "assets/images/preview/landscape_v1.jpg",
+      "pixel_width": 1600,
+      "pixel_height": 1197
+    }
+  },
+  "tags": [
+    "daylight",
+    "landscape",
+    "sky",
+    "foliage",
+    "texture"
+  ],
+  "approval_status": "approved"
+}

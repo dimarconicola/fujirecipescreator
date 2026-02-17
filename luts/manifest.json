@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "generated_at": "2026-02-16",
+  "luts": [
+    {
+      "lut_id": "official_fuji_xt4_pack_v12",
+      "family": "xtrans4",
+      "source": "official",
+      "source_url": "https://www.fujifilm-x.com/global/support/download/lut/",
+      "direct_download_url": "https://dl.fujifilm-x.com/support/lut/x-t4/x-t4-3d-lut-v12.zip",
+      "license_name": "FUJIFILM Global Terms of Use (website content)",
+      "license_url": "https://www.fujifilm.com/terms_of_use/",
+      "redistribution_allowed": "no",
+      "modification_allowed": "unclear",
+      "commercial_use_allowed": "no",
+      "attribution_required": "unclear",
+      "approval_status": "blocked",
+      "notes": "Policy decision 2026-02-17: reject redistribution. Terms indicate downloads/content are for personal noncommercial use unless separately permitted; no explicit redistributable LUT license found."
+    },
+    {
+      "lut_id": "official_fuji_xt30iiiii_pack_v101",
+      "family": "xtrans4",
+      "source": "official",
+      "source_url": "https://www.fujifilm-x.com/global/support/download/lut/",
+      "direct_download_url": "https://dl.fujifilm-x.com/support/lut/x-t30_ii_iii/x-t30_ii_iii-3d-lut-v101.zip",
+      "license_name": "FUJIFILM Global Terms of Use (website content)",
+      "license_url": "https://www.fujifilm.com/terms_of_use/",
+      "redistribution_allowed": "no",
+      "modification_allowed": "unclear",
+      "commercial_use_allowed": "no",
+      "attribution_required": "unclear",
+      "approval_status": "blocked",
+      "notes": "Policy decision 2026-02-17: reject redistribution. Terms indicate downloads/content are for personal noncommercial use unless separately permitted; no explicit redistributable LUT license found."
+    },
+    {
+      "lut_id": "community_a6000_vivid_1",
+      "family": "teaching",
+      "source": "community",
+      "source_url": "https://github.com/jonmatifa/a6000-LUTs",
+      "local_path": "luts/community/a6000-LUTs-master/a6000 vivid_1.C0006.cube",
+      "license_name": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "redistribution_allowed": "yes",
+      "modification_allowed": "yes",
+      "commercial_use_allowed": "yes",
+      "attribution_required": "no",
+      "approval_status": "approved",
+      "notes": "Fallback teaching LUT; not Fuji-branded simulation."
+    },
+    {
+      "lut_id": "community_a6000_slog2_1",
+      "family": "teaching",
+      "source": "community",
+      "source_url": "https://github.com/jonmatifa/a6000-LUTs",
+      "local_path": "luts/community/a6000-LUTs-master/a6000 slog2_1.C0006.cube",
+      "license_name": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "redistribution_allowed": "yes",
+      "modification_allowed": "yes",
+      "commercial_use_allowed": "yes",
+      "attribution_required": "no",
+      "approval_status": "approved",
+      "notes": "Fallback teaching LUT; not Fuji-branded simulation."
+    },
+    {
+      "lut_id": "community_a6000_slog3_1",
+      "family": "teaching",
+      "source": "community",
+      "source_url": "https://github.com/jonmatifa/a6000-LUTs",
+      "local_path": "luts/community/a6000-LUTs-master/a6000 slog3_1.C0006.cube",
+      "license_name": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "redistribution_allowed": "yes",
+      "modification_allowed": "yes",
+      "commercial_use_allowed": "yes",
+      "attribution_required": "no",
+      "approval_status": "approved",
+      "notes": "Fallback teaching LUT; not Fuji-branded simulation."
+    }
+  ]
+}
