@@ -48,7 +48,8 @@ Core path checks:
 10. Cloud sync push/pull flow works against mocked GitHub Gist APIs.
 11. Footer exposes a QA diagnostics status line with renderer/model/compare context.
 12. Cross-browser viewport screenshot baselines cover split-divider + hover-control states.
-13. Screenshot baseline assertions are pinned to macOS snapshot artifacts and are skipped on non-darwin runners.
+13. Screenshot baseline assertions are enabled in CI with committed per-platform artifacts (darwin + linux).
+14. Layout guards assert no horizontal page overflow at default and narrow viewport widths.
 
 ## Environment Notes
 
@@ -63,8 +64,8 @@ If browser download or local port binding is blocked by sandbox/network policy, 
 
 CI trigger policy lives in `/Users/nicoladimarco/code/fujirecipescreator/.github/workflows/ci.yml` and must include:
 
-1. `push` on `master`, `main`, and `codex/**`.
-2. `pull_request` on `master`, `main`, and `codex/**`.
+1. `push` on `main` and `codex/**`.
+2. `pull_request` on `main` and `codex/**`.
 
 Verification checklist (remote GitHub):
 

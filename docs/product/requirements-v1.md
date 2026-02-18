@@ -66,6 +66,7 @@ The app is explicitly educational and approximate, not a camera JPEG engine emul
 - `FR-016`: Export as Fuji-style text block.
 - `FR-017`: Export as JSON.
 - `FR-018`: Share link with versioned state encoding and state restoration.
+- `FR-021`: Optional manual cloud sync using user-supplied GitHub Gist credentials (push/pull snapshot flow).
 
 ### Trust and Messaging
 
@@ -106,10 +107,11 @@ The app is explicitly educational and approximate, not a camera JPEG engine emul
 6. Exported text and JSON exactly match current state.
 7. Share link restores exact encoded state with deterministic profile/model mapping for unsupported profile IDs.
 8. Approximate disclosure is always accessible in the UI.
+9. If cloud sync credentials are provided, gist push/pull round-trip preserves recipe snapshot validity.
 
 ## 9) Out-of-Scope for MVP
 
-1. Cloud accounts/sync.
+1. Managed cloud account platform beyond manual GitHub Gist sync.
 2. Camera tethering or direct camera setting writes.
 3. User-uploaded images.
 4. Full multi-profile parity beyond initial launch baseline.

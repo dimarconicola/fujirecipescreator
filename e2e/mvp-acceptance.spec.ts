@@ -45,6 +45,25 @@ test("profile switching applies catalog profile and hides fixed controls", async
   await expect(page.getByLabel("Clarity")).toHaveCount(1);
 });
 
+test("layout does not introduce horizontal overflow", async ({ page }) => {
+  await page.goto("/");
+
+  const desktopOverflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return root.scrollWidth - root.clientWidth;
+  });
+  expect(desktopOverflow).toBeLessThanOrEqual(1);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(120);
+
+  const narrowOverflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return root.scrollWidth - root.clientWidth;
+  });
+  expect(narrowOverflow).toBeLessThanOrEqual(1);
+});
+
 test("share link restoration covers same-profile and legacy migration paths", async ({
   page,
 }) => {
@@ -165,26 +184,24 @@ test("viewer interactions: hover zoom controls, hold-before preview, split drag"
 });
 
 test("visual baseline for split divider and hover controls", async ({ page }) => {
-  test.skip(
-    process.platform !== "darwin",
-    "Visual baselines are currently pinned to macOS snapshots.",
-  );
-
   await page.goto("/");
 
   const viewport = page.getByTestId("viewer-viewport");
   await viewport.hover();
+  await expect(page.getByTestId("viewer-zoom-controls")).toHaveCSS("opacity", "1");
   await page.getByRole("button", { name: "Split Screen: Off" }).click();
   await page.waitForTimeout(250);
 
   await expect(viewport).toHaveScreenshot("viewer-split-hover-controls.png", {
     animations: "disabled",
     caret: "hide",
+    maxDiffPixelRatio: 0.03,
   });
 });
 
 test("preset gallery preview rendering stays responsive while chunking", async ({
   page,
+  browserName,
 }) => {
   await page.goto("/");
 
@@ -201,7 +218,8 @@ test("preset gallery preview rendering stays responsive while chunking", async (
   const maxBatchMatch = finalStatus.match(/max batch ([0-9.]+)ms/);
   expect(maxBatchMatch).not.toBeNull();
   const maxBatchMs = Number(maxBatchMatch?.[1] ?? "0");
-  expect(maxBatchMs).toBeLessThan(500);
+  const maxBatchBudgetMs = browserName === "firefox" ? 420 : 360;
+  expect(maxBatchMs).toBeLessThan(maxBatchBudgetMs);
 });
 
 test("cloud sync push and pull via GitHub gist API", async ({ page }) => {

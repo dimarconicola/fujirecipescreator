@@ -52,7 +52,7 @@ Decision note (2026-02-17):
 - NI-011 added explicit Playwright coverage for hover zoom controls, long-press before preview, and split-divider drag behavior.
 - NI-012 added explicit Playwright share-link restoration coverage for same-profile and legacy-profile migration flows.
 - NI-013 wired `test:acceptance` into CI after Playwright browser installation.
-- NI-014 verified via PR #1 (`codex/ci-trigger-probe -> main`) with successful `pull_request` CI run: https://github.com/dimarconicola/fujirecipescreator/actions/runs/22131422404.
+- NI-014 verified via PR #1 (`codex/ci-trigger-probe -> main`) with successful `pull_request` CI run: https://github.com/dimarconicola/fujirecipescreator/actions/runs/22131422404; CI branch policy is now `main` + `codex/**`.
 - NI-015 completed with lazy + chunked preset preview rendering, telemetry, and Playwright responsiveness coverage across Chromium/Firefox/WebKit.
 - NI-016 removed unused slider sweep component/logic/tests from the codebase.
 - NI-017 added a dedicated footer QA diagnostics line with renderer mode, model/profile, compare mode, image, and zoom context.

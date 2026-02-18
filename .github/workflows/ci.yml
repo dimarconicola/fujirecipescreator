@@ -3,12 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - master
       - main
       - "codex/**"
   pull_request:
     branches:
-      - master
       - main
       - "codex/**"
 

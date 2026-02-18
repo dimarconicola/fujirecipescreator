@@ -23,7 +23,7 @@ describe("ci workflow branch policy", () => {
     "../../../.github/workflows/ci.yml",
   );
   const workflow = readFileSync(workflowPath, "utf8");
-  const requiredBranches = ["master", "main", "codex/**"];
+  const requiredBranches = ["main", "codex/**"];
 
   it("keeps required push branch filters", () => {
     const pushBranches = extractBranchesBlock(workflow, "push");
