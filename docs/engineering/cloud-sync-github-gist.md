@@ -31,6 +31,7 @@ This implementation provides account-backed cloud recipe sync for the web app us
 2. Use a fine-grained token scoped only to required gist permissions.
 3. Rotate token if exposed.
 4. Filename input rejects path separators (`/`, `\`) to avoid accidental path-like values.
+5. Pulling truncated gist files only follows trusted GitHub raw hosts over HTTPS before sending authorization headers.
 
 ## Data Format
 

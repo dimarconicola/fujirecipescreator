@@ -301,6 +301,7 @@ Cloud sync:
 - validation:
   - gist input must normalize to a hex gist ID
   - filename must not include path separators
+  - truncated gist `raw_url` pulls are restricted to trusted GitHub raw hosts over HTTPS
 - pulled payload supports wrapper format:
   - `{ version: 1, exported_at, data }`
   - or raw snapshot object

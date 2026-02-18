@@ -21,6 +21,10 @@ type GistResponse = {
 };
 
 const GIST_ID_PATTERN = /^[a-f0-9]{8,64}$/i;
+const TRUSTED_GIST_RAW_HOSTS = new Set([
+  "gist.githubusercontent.com",
+  "raw.githubusercontent.com",
+]);
 
 function normalizeFilename(filenameInput?: string): string {
   const filename = (filenameInput ?? DEFAULT_SYNC_FILENAME).trim() || DEFAULT_SYNC_FILENAME;
@@ -56,6 +60,25 @@ function normalizeGistId(gistIdInput: string): string {
   }
 
   return normalized;
+}
+
+function assertTrustedGistRawUrl(rawUrl: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error("Cloud pull failed: gist raw_url is invalid.");
+  }
+
+  if (parsed.protocol !== "https:") {
+    throw new Error("Cloud pull failed: gist raw_url must use HTTPS.");
+  }
+
+  if (!TRUSTED_GIST_RAW_HOSTS.has(parsed.hostname)) {
+    throw new Error("Cloud pull failed: gist raw_url host is not trusted.");
+  }
+
+  return parsed.toString();
 }
 
 function normalizeConfig(config: GithubGistSyncConfig): {
@@ -136,7 +159,8 @@ async function readGistFileContent(
     return null;
   }
 
-  const response = await fetch(file.raw_url, {
+  const trustedRawUrl = assertTrustedGistRawUrl(file.raw_url);
+  const response = await fetch(trustedRawUrl, {
     headers: {
       Accept: "application/vnd.github.raw",
       Authorization: `Bearer ${token}`,

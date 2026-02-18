@@ -94,6 +94,76 @@ describe("cloud sync", () => {
     expect(snapshot.activeRecipeId).toBe("recipe-1");
   });
 
+  it("pulls truncated gist content from a trusted raw URL", async () => {
+    const filePayload = JSON.stringify({
+      version: 1,
+      exported_at: "2026-02-18T00:01:00.000Z",
+      data: baseSnapshot,
+    });
+    const trustedRawUrl =
+      "https://gist.githubusercontent.com/demo-user/1a2b3c4d5e6f7a8b9c0d/raw/fuji-recipes-sync-v1.json";
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            files: {
+              [DEFAULT_SYNC_FILENAME]: {
+                filename: DEFAULT_SYNC_FILENAME,
+                truncated: true,
+                raw_url: trustedRawUrl,
+              },
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(filePayload, {
+          status: 200,
+          headers: { "content-type": "application/vnd.github.raw" },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pulled = await pullSnapshotFromGithubGist({
+      token: "token-123",
+      gistId: "1a2b3c4d5e6f7a8b9c0d",
+    });
+
+    const snapshot = pulled as RecipeStoreSnapshot;
+    expect(snapshot.recipeName).toBe("Cloud Test");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(trustedRawUrl);
+  });
+
+  it("rejects truncated gist content when raw URL host is untrusted", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          files: {
+            [DEFAULT_SYNC_FILENAME]: {
+              filename: DEFAULT_SYNC_FILENAME,
+              truncated: true,
+              raw_url: "https://evil.example/sync.json",
+            },
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      pullSnapshotFromGithubGist({
+        token: "token-123",
+        gistId: "1a2b3c4d5e6f7a8b9c0d",
+      }),
+    ).rejects.toThrow("raw_url host is not trusted");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("rejects pushes when required sync credentials are missing", async () => {
     await expect(
       pushSnapshotToGithubGist(
