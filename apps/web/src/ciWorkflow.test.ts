@@ -44,4 +44,10 @@ describe("ci workflow branch policy", () => {
       );
     }
   });
+
+  it("enables concurrency cancellation for superseded ref runs", () => {
+    expect(workflow).toMatch(
+      /concurrency:\n\s+group:\s+ci-\$\{\{\s*github\.workflow\s*\}\}-\$\{\{\s*github\.ref\s*\}\}\n\s+cancel-in-progress:\s*true/m,
+    );
+  });
 });
