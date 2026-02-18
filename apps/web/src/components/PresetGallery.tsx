@@ -21,17 +21,22 @@ type PreviewRenderTelemetry = {
 };
 
 const rootStyle: CSSProperties = {
-  border: "1px solid #d8d8d8",
-  borderRadius: "12px",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-lg)",
   marginTop: "16px",
   overflow: "hidden",
+  background:
+    "linear-gradient(180deg, rgba(20, 29, 41, 0.98), rgba(14, 21, 31, 0.98))",
+  color: "var(--ui-text-1)",
 };
 
 const summaryStyle: CSSProperties = {
   padding: "12px 14px",
-  backgroundColor: "#fafafa",
+  backgroundColor: "rgba(9, 14, 21, 0.62)",
+  borderBottom: "1px solid rgba(48, 68, 89, 0.62)",
   cursor: "pointer",
   fontWeight: 600,
+  color: "var(--ui-text-0)",
 };
 
 const contentStyle: CSSProperties = {
@@ -48,7 +53,7 @@ const controlsStyle: CSSProperties = {
 };
 
 const telemetryStyle: CSSProperties = {
-  color: "#5a5a5a",
+  color: "var(--ui-text-2)",
   fontSize: "12px",
 };
 
@@ -59,11 +64,13 @@ const gridStyle: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  border: "1px solid #ececec",
+  border: "1px solid var(--ui-border-soft)",
   borderRadius: "10px",
   padding: "8px",
   display: "grid",
   gap: "6px",
+  background:
+    "linear-gradient(180deg, rgba(24, 35, 49, 0.96), rgba(18, 27, 39, 0.96))",
 };
 
 const previewStyle: CSSProperties = {
@@ -71,7 +78,7 @@ const previewStyle: CSSProperties = {
   height: "96px",
   objectFit: "cover",
   borderRadius: "7px",
-  border: "1px solid #e6e6e6",
+  border: "1px solid var(--ui-border-soft)",
 };
 
 const presetNameStyle: CSSProperties = {
@@ -82,7 +89,7 @@ const presetNameStyle: CSSProperties = {
 const presetDescriptionStyle: CSSProperties = {
   margin: 0,
   fontSize: "12px",
-  color: "#5a5a5a",
+  color: "var(--ui-text-2)",
   lineHeight: 1.3,
 };
 

@@ -12,8 +12,13 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
     "@fuji/domain": "0.1.0",
     "@fuji/engine-webgl": "0.1.0",
+    "@mantine/core": "^8.3.15",
+    "@mantine/hooks": "^8.3.15",
+    "@tabler/icons-react": "^3.36.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.3"

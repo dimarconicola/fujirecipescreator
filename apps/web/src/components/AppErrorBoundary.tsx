@@ -13,11 +13,14 @@ const fallbackRootStyle = {
   maxWidth: "760px",
   margin: "48px auto",
   padding: "20px",
-  border: "1px solid #d8d8d8",
+  border: "1px solid var(--ui-border-soft)",
   borderRadius: "12px",
-  fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
+  fontFamily: "'Manrope Variable', system-ui, -apple-system, Segoe UI, sans-serif",
   display: "grid",
   gap: "12px",
+  color: "var(--ui-text-1)",
+  background:
+    "linear-gradient(180deg, rgba(21, 31, 45, 0.98), rgba(14, 22, 34, 0.98))",
 };
 
 function clearPersistedState(): void {

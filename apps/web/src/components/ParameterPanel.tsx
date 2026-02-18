@@ -6,19 +6,23 @@ import type { CompareMode } from "../state/viewerStore";
 import { buildParameterGroups } from "./parameterPanelConfig";
 
 const panelStyle: CSSProperties = {
-  border: "1px solid #d8d8d8",
-  borderRadius: "12px",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-lg)",
   padding: "12px",
-  backgroundColor: "#f7f7f7",
+  background:
+    "linear-gradient(180deg, rgba(22, 32, 46, 0.98), rgba(16, 23, 33, 0.98))",
   display: "grid",
   gap: "12px",
   alignContent: "start",
+  color: "var(--ui-text-1)",
+  boxShadow: "0 20px 42px rgba(0, 0, 0, 0.36)",
 };
 
 const groupStyle: CSSProperties = {
-  border: "1px solid #dfdfdf",
-  borderRadius: "10px",
-  backgroundColor: "#fff",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-md)",
+  background:
+    "linear-gradient(180deg, rgba(24, 35, 49, 0.98), rgba(19, 28, 40, 0.98))",
   overflow: "hidden",
 };
 
@@ -26,7 +30,10 @@ const summaryStyle: CSSProperties = {
   padding: "10px 12px",
   cursor: "pointer",
   fontWeight: 600,
-  backgroundColor: "#fafafa",
+  color: "var(--ui-text-0)",
+  backgroundColor: "rgba(10, 15, 22, 0.45)",
+  borderBottom: "1px solid rgba(47, 69, 91, 0.55)",
+  letterSpacing: "0.02em",
 };
 
 const groupBodyStyle: CSSProperties = {
@@ -55,11 +62,12 @@ const sliderStackStyle: CSSProperties = {
 };
 
 const wbShiftCardStyle: CSSProperties = {
-  border: "1px solid #efefef",
+  border: "1px solid var(--ui-border-soft)",
   borderRadius: "8px",
   padding: "10px",
   display: "grid",
   gap: "8px",
+  backgroundColor: "rgba(12, 19, 27, 0.68)",
 };
 
 const wbAxisRowStyle: CSSProperties = {
@@ -77,8 +85,10 @@ const viewerControlRowStyle: CSSProperties = {
 };
 
 const activeCompareButtonStyle: CSSProperties = {
-  backgroundColor: "#1f1f1f",
-  color: "#fff",
+  background:
+    "linear-gradient(180deg, rgba(58, 138, 173, 0.95), rgba(44, 118, 149, 0.95))",
+  borderColor: "rgba(119, 214, 255, 0.82)",
+  color: "var(--ui-text-0)",
 };
 
 type ParameterPanelProps = {
@@ -140,7 +150,9 @@ export function ParameterPanel({
             >
               {compareMode === "split" ? "Split Screen: On" : "Split Screen: Off"}
             </button>
-            <small>Press and hold on the image to preview Before.</small>
+            <small style={{ color: "var(--ui-text-2)" }}>
+              Press and hold on the image to preview Before.
+            </small>
           </div>
         </div>
       </details>
@@ -158,7 +170,9 @@ export function ParameterPanel({
                 const controlId = `${group.id}-${control.key}`;
                 return (
                   <div key={controlId} style={controlRowStyle}>
-                    <label htmlFor={controlId}>{control.label}</label>
+                    <label htmlFor={controlId} style={{ color: "var(--ui-text-1)" }}>
+                      {control.label}
+                    </label>
                     <select
                       id={controlId}
                       value={String(params[control.key])}
@@ -194,7 +208,7 @@ export function ParameterPanel({
                   <div key={controlId} style={sliderStackStyle}>
                     <div style={sliderHeaderStyle}>
                       <label htmlFor={controlId}>{control.label}</label>
-                      <span>{value}</span>
+                      <span style={{ color: "var(--ui-text-2)" }}>{value}</span>
                       <button type="button" onClick={() => resetParam(control.key)}>
                         Reset
                       </button>
@@ -237,7 +251,7 @@ export function ParameterPanel({
                   </div>
                   <div style={wbAxisRowStyle}>
                     <label htmlFor="wb-shift-a">A/B Shift</label>
-                    <span>{params.wb_shift.a_b}</span>
+                    <span style={{ color: "var(--ui-text-2)" }}>{params.wb_shift.a_b}</span>
                   </div>
                   <input
                     id="wb-shift-a"
@@ -250,7 +264,7 @@ export function ParameterPanel({
                   />
                   <div style={wbAxisRowStyle}>
                     <label htmlFor="wb-shift-r">R/B Shift</label>
-                    <span>{params.wb_shift.r_b}</span>
+                    <span style={{ color: "var(--ui-text-2)" }}>{params.wb_shift.r_b}</span>
                   </div>
                   <input
                     id="wb-shift-r"
