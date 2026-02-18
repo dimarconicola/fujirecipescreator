@@ -50,6 +50,7 @@ Core path checks:
 12. Cross-browser viewport screenshot baselines cover split-divider + hover-control states.
 13. Screenshot baseline assertions are enabled in CI with committed per-platform artifacts (darwin + linux).
 14. Layout guards assert no horizontal page overflow at default and narrow viewport widths.
+15. Preset preview responsiveness checks assert chunked rendering telemetry (`chunks`, `avg`, `max batch`, `total`) against browser-specific budgets.
 
 ## Environment Notes
 

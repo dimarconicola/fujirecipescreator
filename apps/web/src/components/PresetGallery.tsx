@@ -14,6 +14,8 @@ type PreviewRenderTelemetry = {
   phase: "idle" | "rendering" | "ready";
   renderedCount: number;
   totalCount: number;
+  chunkCount: number;
+  avgChunkMs: number;
   maxChunkMs: number;
   totalMs: number;
 };
@@ -151,6 +153,8 @@ export function PresetGallery({ onApplyPreset, onSelectImage }: PresetGalleryPro
     phase: "idle",
     renderedCount: 0,
     totalCount: curatedPresets.length,
+    chunkCount: 0,
+    avgChunkMs: 0,
     maxChunkMs: 0,
     totalMs: 0,
   });
@@ -191,11 +195,15 @@ export function PresetGallery({ onApplyPreset, onSelectImage }: PresetGalleryPro
         );
         const totalCount = curatedPresets.length;
         let maxChunkMs = 0;
+        let chunkCount = 0;
+        let totalChunkWorkMs = 0;
 
         setPreviewTelemetry({
           phase: pendingPresets.length > 0 ? "rendering" : "ready",
           renderedCount: totalCount - pendingPresets.length,
           totalCount,
+          chunkCount: 0,
+          avgChunkMs: 0,
           maxChunkMs: 0,
           totalMs: 0,
         });
@@ -214,11 +222,17 @@ export function PresetGallery({ onApplyPreset, onSelectImage }: PresetGalleryPro
             return;
           }
 
+          if (chunkDuration > 0) {
+            chunkCount += 1;
+            totalChunkWorkMs += chunkDuration;
+          }
           maxChunkMs = Math.max(maxChunkMs, chunkDuration);
           setPreviewTelemetry({
             phase,
             renderedCount: totalCount - pendingPresets.length,
             totalCount,
+            chunkCount,
+            avgChunkMs: chunkCount > 0 ? totalChunkWorkMs / chunkCount : 0,
             maxChunkMs,
             totalMs: performance.now() - runStart,
           });
@@ -319,8 +333,8 @@ export function PresetGallery({ onApplyPreset, onSelectImage }: PresetGalleryPro
             {previewTelemetry.phase === "idle"
               ? "Preview render idle (opens lazily)."
               : previewTelemetry.phase === "rendering"
-                ? `Preview render ${previewTelemetry.renderedCount}/${previewTelemetry.totalCount} · max batch ${formatTelemetryValue(previewTelemetry.maxChunkMs)}ms`
-                : `Preview render ready ${previewTelemetry.renderedCount}/${previewTelemetry.totalCount} · max batch ${formatTelemetryValue(previewTelemetry.maxChunkMs)}ms · total ${formatTelemetryValue(previewTelemetry.totalMs)}ms`}
+                ? `Preview render ${previewTelemetry.renderedCount}/${previewTelemetry.totalCount} · chunks ${previewTelemetry.chunkCount} · avg ${formatTelemetryValue(previewTelemetry.avgChunkMs)}ms · max batch ${formatTelemetryValue(previewTelemetry.maxChunkMs)}ms`
+                : `Preview render ready ${previewTelemetry.renderedCount}/${previewTelemetry.totalCount} · chunks ${previewTelemetry.chunkCount} · avg ${formatTelemetryValue(previewTelemetry.avgChunkMs)}ms · max batch ${formatTelemetryValue(previewTelemetry.maxChunkMs)}ms · total ${formatTelemetryValue(previewTelemetry.totalMs)}ms`}
           </small>
         </div>
 

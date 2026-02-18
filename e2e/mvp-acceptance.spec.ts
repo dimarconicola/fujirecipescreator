@@ -215,6 +215,17 @@ test("preset gallery preview rendering stays responsive while chunking", async (
 
   await expect(renderStatus).toContainText("Preview render ready");
   const finalStatus = (await renderStatus.textContent()) ?? "";
+  const chunkCountMatch = finalStatus.match(/chunks ([0-9]+)/);
+  expect(chunkCountMatch).not.toBeNull();
+  const chunkCount = Number(chunkCountMatch?.[1] ?? "0");
+  expect(chunkCount).toBeGreaterThan(1);
+
+  const totalMatch = finalStatus.match(/total ([0-9.]+)ms/);
+  expect(totalMatch).not.toBeNull();
+  const totalMs = Number(totalMatch?.[1] ?? "0");
+  const totalBudgetMs = browserName === "firefox" ? 1800 : 1300;
+  expect(totalMs).toBeLessThan(totalBudgetMs);
+
   const maxBatchMatch = finalStatus.match(/max batch ([0-9.]+)ms/);
   expect(maxBatchMatch).not.toBeNull();
   const maxBatchMs = Number(maxBatchMatch?.[1] ?? "0");
