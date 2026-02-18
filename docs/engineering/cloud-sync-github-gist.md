@@ -24,6 +24,7 @@ This implementation provides account-backed cloud recipe sync for the web app us
 - Actions:
   - `Push Cloud`
   - `Pull Cloud`
+  - Both actions stay disabled until token and gist input are provided.
 
 ## Security Notes
 

@@ -343,8 +343,12 @@ test("cloud sync push and pull via GitHub gist API", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
 
   await page.getByText("Cloud Sync (GitHub Gist)").click();
+  await expect(page.getByRole("button", { name: "Push Cloud" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Pull Cloud" })).toBeDisabled();
   await page.getByLabel("Gist ID").fill("1a2b3c4d5e6f7a8b9c0d");
   await page.getByLabel("Token").fill("token-123");
+  await expect(page.getByRole("button", { name: "Push Cloud" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Pull Cloud" })).toBeEnabled();
 
   await page.getByRole("button", { name: "Push Cloud" }).click();
   await expect(page.getByText("Cloud sync push complete")).toBeVisible();

@@ -291,6 +291,8 @@ export function RecipeToolbar({
     }
   };
 
+  const canRunCloudSync = cloudToken.trim().length > 0 && cloudGistId.trim().length > 0;
+
   return (
     <section style={toolbarStyle}>
       <div style={rowStyle}>
@@ -412,10 +414,18 @@ export function RecipeToolbar({
             />
           </div>
           <div style={rowStyle}>
-            <button type="button" onClick={() => void pushCloudSnapshot()} disabled={isCloudBusy}>
+            <button
+              type="button"
+              onClick={() => void pushCloudSnapshot()}
+              disabled={isCloudBusy || !canRunCloudSync}
+            >
               Push Cloud
             </button>
-            <button type="button" onClick={() => void pullCloudSnapshot()} disabled={isCloudBusy}>
+            <button
+              type="button"
+              onClick={() => void pullCloudSnapshot()}
+              disabled={isCloudBusy || !canRunCloudSync}
+            >
               Pull Cloud
             </button>
             <small>Private gist + token with gist write/read scope required.</small>
