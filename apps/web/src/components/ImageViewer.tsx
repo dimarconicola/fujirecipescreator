@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent,
   type PointerEvent,
 } from "react";
 import {
@@ -206,6 +207,7 @@ export function ImageViewer({
   const [renderQuality, setRenderQuality] = useState<RenderQuality>("settle");
   const [cachedFrameSrc, setCachedFrameSrc] = useState<string | null>(null);
   const [isMouseHoveringViewer, setIsMouseHoveringViewer] = useState(false);
+  const [isViewerFocused, setIsViewerFocused] = useState(false);
   const [isBeforeHoldActive, setIsBeforeHoldActive] = useState(false);
 
   const activeImage = useMemo(
@@ -423,6 +425,59 @@ export function ImageViewer({
     dragRef.current = null;
   };
 
+  const handleViewerKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      onZoomBy(1.1);
+      return;
+    }
+
+    if (event.key === "-" || event.key === "_") {
+      event.preventDefault();
+      onZoomBy(0.9);
+      return;
+    }
+
+    if (event.key === "0") {
+      event.preventDefault();
+      onResetView();
+      return;
+    }
+
+    if ((event.key === " " || event.key === "Enter") && compareMode !== "split") {
+      event.preventDefault();
+      setIsBeforeHoldActive(true);
+      return;
+    }
+
+    const panStep = 24;
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      onSetPan(transform.offsetX - panStep, transform.offsetY);
+      return;
+    }
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      onSetPan(transform.offsetX + panStep, transform.offsetY);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      onSetPan(transform.offsetX, transform.offsetY - panStep);
+      return;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      onSetPan(transform.offsetX, transform.offsetY + panStep);
+    }
+  };
+
+  const handleViewerKeyUp = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === " " || event.key === "Enter") {
+      setIsBeforeHoldActive(false);
+    }
+  };
+
   const isSplitMode = compareMode === "split";
   const beforeLayerVisible = isSplitMode || isBeforeHoldActive;
   const afterLayerVisible = isSplitMode || !isBeforeHoldActive;
@@ -494,11 +549,20 @@ export function ImageViewer({
       <div
         style={viewportStyle}
         data-testid="viewer-viewport"
+        tabIndex={0}
+        aria-label="Recipe viewer viewport"
         onPointerDown={handlePointerDownPan}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onPointerLeave={() => setIsBeforeHoldActive(false)}
+        onFocus={() => setIsViewerFocused(true)}
+        onBlur={() => {
+          setIsViewerFocused(false);
+          setIsBeforeHoldActive(false);
+        }}
+        onKeyDown={handleViewerKeyDown}
+        onKeyUp={handleViewerKeyUp}
       >
         {beforeLayerVisible ? (
           <img
@@ -542,8 +606,8 @@ export function ImageViewer({
           data-testid="viewer-zoom-controls"
           style={{
             ...zoomOverlayStyle,
-            opacity: isMouseHoveringViewer ? 1 : 0,
-            pointerEvents: isMouseHoveringViewer ? "auto" : "none",
+            opacity: isMouseHoveringViewer || isViewerFocused ? 1 : 0,
+            pointerEvents: isMouseHoveringViewer || isViewerFocused ? "auto" : "none",
           }}
           onPointerDown={(event) => event.stopPropagation()}
         >
@@ -553,6 +617,7 @@ export function ImageViewer({
             style={zoomButtonStyle}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={() => onZoomBy(1.1)}
+            aria-label="Zoom in"
           >
             +
           </button>
@@ -562,16 +627,20 @@ export function ImageViewer({
             style={zoomButtonStyle}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={() => onZoomBy(0.9)}
+            aria-label="Zoom out"
           >
             -
           </button>
-          <span style={zoomLabelStyle}>{transform.scale.toFixed(2)}x</span>
+          <span style={zoomLabelStyle} data-testid="viewer-zoom-value">
+            {transform.scale.toFixed(2)}x
+          </span>
           <button
             type="button"
             data-testid="viewer-zoom-reset"
             style={zoomResetButtonStyle}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={onResetView}
+            aria-label="Reset zoom"
           >
             Reset
           </button>

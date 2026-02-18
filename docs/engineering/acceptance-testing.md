@@ -51,6 +51,7 @@ Core path checks:
 13. Screenshot baseline assertions are enabled in CI with committed per-platform artifacts (darwin + linux).
 14. Layout guards assert no horizontal page overflow at default and narrow viewport widths.
 15. Preset preview responsiveness checks assert chunked rendering telemetry (`chunks`, `avg`, `max batch`, `total`) against browser-specific budgets.
+16. Viewer keyboard accessibility covers focus-revealed controls, keyboard zoom/reset, and keyboard hold-before preview.
 
 ## Environment Notes
 

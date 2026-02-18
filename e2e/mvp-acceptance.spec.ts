@@ -183,6 +183,35 @@ test("viewer interactions: hover zoom controls, hold-before preview, split drag"
   expect(splitAfter).toBeGreaterThan(splitBefore + 5);
 });
 
+test("viewer keyboard accessibility: focus controls, zoom keys, hold-before key", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const viewport = page.getByTestId("viewer-viewport");
+  const zoomControls = page.getByTestId("viewer-zoom-controls");
+  const zoomValue = page.getByTestId("viewer-zoom-value");
+
+  await expect(zoomControls).toHaveCSS("opacity", "0");
+  await viewport.focus();
+  await expect(zoomControls).toHaveCSS("opacity", "1");
+
+  await expect(zoomValue).toContainText("1.00x");
+  await page.keyboard.press("Equal");
+  const zoomAfterInText = (await zoomValue.textContent()) ?? "0x";
+  const zoomAfterIn = Number(zoomAfterInText.replace("x", ""));
+  expect(zoomAfterIn).toBeGreaterThan(1);
+
+  await page.keyboard.press("Digit0");
+  await expect(zoomValue).toContainText("1.00x");
+
+  await expect(page.getByTestId("viewer-before-layer")).toHaveCount(0);
+  await page.keyboard.down("Space");
+  await expect(page.getByTestId("viewer-before-layer")).toBeVisible();
+  await page.keyboard.up("Space");
+  await expect(page.getByTestId("viewer-before-layer")).toHaveCount(0);
+});
+
 test("visual baseline for split divider and hover controls", async ({ page }) => {
   await page.goto("/");
 
