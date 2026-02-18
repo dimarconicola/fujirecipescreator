@@ -57,6 +57,8 @@ Decision note (2026-02-17):
 - NI-016 removed unused slider sweep component/logic/tests from the codebase.
 - NI-017 added a dedicated footer QA diagnostics line with renderer mode, model/profile, compare mode, image, and zoom context.
 - NI-018 added Playwright screenshot baselines for split-divider + hover-control states across Chromium/Firefox/WebKit.
+- NI-019 replaced split compare `clip-path` cropping with a mask-container implementation to reduce drag jitter/glitch artifacts across browsers.
+- NI-020 strengthened Color Chrome / Color Chrome Blue response curves (CPU + WebGL parity) and tightened renderer tests to assert perceptible chroma shift magnitude.
 
 ## P2: Performance and UX Refinement
 
@@ -66,6 +68,8 @@ Decision note (2026-02-17):
 | NI-016 | P2 | Remove or archive deprecated slider sweep feature if intentionally out of UX scope. | Frontend/Docs | S | NI-002 | No dead entry points/imports remain for sweep strips, and docs/backlog no longer claim it as active UX. | done |
 | NI-017 | P2 | Add an explicit “render mode” diagnostics line for QA (WebGL2 vs CPU fallback + profile/model + compare mode). | Frontend | S | none | QA can capture a single status line with current rendering mode and viewer mode in bug reports. | done |
 | NI-018 | P2 | Add visual baselines for split divider and hover controls in all three browsers. | QA | M | NI-011 | Snapshot or screenshot checks catch split jitter/overlay regressions before merge. | done |
+| NI-019 | P2 | Stabilize split compare rendering by replacing clip-path cropping with overflow mask composition. | Frontend | S | NI-011, NI-018 | Split drag remains visually stable in Chromium/Firefox/WebKit without clip jitter or tearing. | done |
+| NI-020 | P2 | Increase Color Chrome perceptibility and enforce effect-size regression checks. | Rendering/QA | M | NI-010 | Strong Chrome settings produce a measurable saturated-pixel delta in tests and aligned CPU/WebGL behavior. | done |
 
 ## Sequence Recommendation
 
@@ -77,6 +81,8 @@ Decision note (2026-02-17):
 
 3. Sprint C (CI + Performance)
 - NI-013, NI-014, NI-015, NI-016, NI-017, NI-018
+4. Sprint D (UX/Color Hardening)
+- NI-019, NI-020
 
 ## Exit Criteria for This Backlog
 

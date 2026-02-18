@@ -75,23 +75,23 @@ vec3 applyColorChrome(vec3 color, float chromeStrength, float chromeBlueStrength
   float chroma = maxChannel - minChannel;
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
 
-  float saturationMask = smoothstep(0.18, 0.72, chroma);
-  float toneMask = smoothstep(0.2, 0.95, luma);
+  float saturationMask = smoothstep(0.12, 0.64, chroma);
+  float toneMask = smoothstep(0.12, 0.94, luma);
   float chromeMask = saturationMask * toneMask;
   float chromeAmount = chromeStrength * chromeMask;
 
-  color *= 1.0 - chromeAmount * 0.16;
+  color *= 1.0 - chromeAmount * 0.24;
   float gray = dot(color, vec3(0.299, 0.587, 0.114));
-  color = gray + (color - gray) * (1.0 + chromeAmount * 0.24);
+  color = gray + (color - gray) * (1.0 + chromeAmount * 0.36);
 
   float blueDominance = clamp(color.b - max(color.r, color.g), 0.0, 1.0);
-  float blueMask = smoothstep(0.05, 0.35, blueDominance) * saturationMask;
+  float blueMask = smoothstep(0.03, 0.28, blueDominance) * saturationMask * toneMask;
   float blueAmount = chromeBlueStrength * blueMask;
 
-  color.b *= 1.0 + blueAmount * 0.25;
-  color.r *= 1.0 - blueAmount * 0.07;
-  color.g *= 1.0 - blueAmount * 0.04;
-  color *= 1.0 - blueAmount * 0.08;
+  color.b *= 1.0 + blueAmount * 0.44;
+  color.r *= 1.0 - blueAmount * 0.14;
+  color.g *= 1.0 - blueAmount * 0.10;
+  color *= 1.0 - blueAmount * 0.03;
 
   return color;
 }

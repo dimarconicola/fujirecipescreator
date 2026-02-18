@@ -56,7 +56,7 @@ type RendererAdapter = {
 
 const rootStyle: CSSProperties = {
   display: "grid",
-  gap: "8px",
+  gap: "4px",
   alignContent: "start",
   alignSelf: "start",
 };
@@ -64,7 +64,7 @@ const rootStyle: CSSProperties = {
 const tabsStyle: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "6px",
+  gap: "4px",
 };
 
 const viewportStyle: CSSProperties = {
@@ -85,16 +85,17 @@ const layerStyleBase: CSSProperties = {
   maxHeight: "none",
   userSelect: "none",
   pointerEvents: "none",
+  willChange: "transform, opacity",
 };
 
 const tabButtonStyle: CSSProperties = {
   border: "1px solid #d4d4d4",
-  borderRadius: "7px",
+  borderRadius: "6px",
   backgroundColor: "#fff",
-  padding: "4px",
+  padding: "3px",
   display: "grid",
-  width: "72px",
-  height: "52px",
+  width: "64px",
+  height: "44px",
   textAlign: "left",
   overflow: "hidden",
 };
@@ -109,7 +110,7 @@ const tabImageStyle: CSSProperties = {
   width: "100%",
   height: "100%",
   objectFit: "cover",
-  borderRadius: "4px",
+  borderRadius: "3px",
 };
 
 const splitDividerStyle: CSSProperties = {
@@ -121,6 +122,15 @@ const splitDividerStyle: CSSProperties = {
   boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
   cursor: "col-resize",
   pointerEvents: "auto",
+};
+
+const splitAfterMaskBaseStyle: CSSProperties = {
+  position: "absolute",
+  top: 0,
+  right: 0,
+  bottom: 0,
+  overflow: "hidden",
+  pointerEvents: "none",
 };
 
 const zoomOverlayStyle: CSSProperties = {
@@ -505,7 +515,10 @@ export function ImageViewer({
   const afterLayerStyle: CSSProperties = {
     ...transformedLayerStyle,
     opacity: afterLayerVisible ? 1 : 0,
-    clipPath: compareMode === "split" ? `inset(0 0 0 ${splitPercent})` : undefined,
+  };
+  const splitAfterMaskStyle: CSSProperties = {
+    ...splitAfterMaskBaseStyle,
+    left: splitPercent,
   };
 
   useEffect(() => {
@@ -572,25 +585,59 @@ export function ImageViewer({
             data-testid="viewer-before-layer"
           />
         ) : null}
-        <canvas
-          aria-label={`${activeImage.title} after render`}
-          ref={canvasRef}
-          data-testid="viewer-after-canvas"
-          style={{
-            ...afterLayerStyle,
-            opacity: showRenderedAfterLayer ? 1 : 0,
-          }}
-        />
-        {showCachedAfterLayer ? (
-          <img
-            src={cachedFrameSrc ?? undefined}
-            alt={`${activeImage.title} cached render`}
-            style={afterLayerStyle}
-          />
-        ) : null}
-        {showFallbackAfterLayer ? (
-          <img src={activeImage.previewSrc} alt={`${activeImage.title} fallback`} style={afterLayerStyle} />
-        ) : null}
+        {isSplitMode ? (
+          <div style={splitAfterMaskStyle}>
+            <canvas
+              aria-label={`${activeImage.title} after render`}
+              ref={canvasRef}
+              data-testid="viewer-after-canvas"
+              style={{
+                ...afterLayerStyle,
+                opacity: showRenderedAfterLayer ? 1 : 0,
+              }}
+            />
+            {showCachedAfterLayer ? (
+              <img
+                src={cachedFrameSrc ?? undefined}
+                alt={`${activeImage.title} cached render`}
+                style={afterLayerStyle}
+              />
+            ) : null}
+            {showFallbackAfterLayer ? (
+              <img
+                src={activeImage.previewSrc}
+                alt={`${activeImage.title} fallback`}
+                style={afterLayerStyle}
+              />
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <canvas
+              aria-label={`${activeImage.title} after render`}
+              ref={canvasRef}
+              data-testid="viewer-after-canvas"
+              style={{
+                ...afterLayerStyle,
+                opacity: showRenderedAfterLayer ? 1 : 0,
+              }}
+            />
+            {showCachedAfterLayer ? (
+              <img
+                src={cachedFrameSrc ?? undefined}
+                alt={`${activeImage.title} cached render`}
+                style={afterLayerStyle}
+              />
+            ) : null}
+            {showFallbackAfterLayer ? (
+              <img
+                src={activeImage.previewSrc}
+                alt={`${activeImage.title} fallback`}
+                style={afterLayerStyle}
+              />
+            ) : null}
+          </>
+        )}
         {isSplitMode ? (
           <div
             style={{

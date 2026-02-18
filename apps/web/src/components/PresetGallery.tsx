@@ -54,24 +54,36 @@ const telemetryStyle: CSSProperties = {
 
 const gridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "10px",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "8px",
 };
 
 const cardStyle: CSSProperties = {
   border: "1px solid #ececec",
   borderRadius: "10px",
-  padding: "10px",
+  padding: "8px",
   display: "grid",
-  gap: "8px",
+  gap: "6px",
 };
 
 const previewStyle: CSSProperties = {
   width: "100%",
-  height: "110px",
+  height: "96px",
   objectFit: "cover",
-  borderRadius: "8px",
+  borderRadius: "7px",
   border: "1px solid #e6e6e6",
+};
+
+const presetNameStyle: CSSProperties = {
+  fontSize: "13px",
+  lineHeight: 1.2,
+};
+
+const presetDescriptionStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "12px",
+  color: "#5a5a5a",
+  lineHeight: 1.3,
 };
 
 const CHUNK_TIME_BUDGET_MS = 8;
@@ -360,9 +372,8 @@ export function PresetGallery({ onApplyPreset, onSelectImage }: PresetGalleryPro
                     style={previewStyle}
                   />
                 ) : null}
-                <strong>{preset.name}</strong>
-                <small>{preset.description}</small>
-                <small>Image: {preset.imageId}</small>
+                <strong style={presetNameStyle}>{preset.name}</strong>
+                <p style={presetDescriptionStyle}>{preset.description}</p>
                 <button
                   type="button"
                   onClick={() => {

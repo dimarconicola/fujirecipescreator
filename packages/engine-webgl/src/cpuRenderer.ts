@@ -103,31 +103,32 @@ function applyColorChrome(
   const chroma = maxChannel - minChannel;
   const luma = 0.2126 * nr + 0.7152 * ng + 0.0722 * nb;
 
-  const saturationMask = smoothstep(0.18, 0.72, chroma);
-  const toneMask = smoothstep(0.2, 0.95, luma);
+  const saturationMask = smoothstep(0.12, 0.64, chroma);
+  const toneMask = smoothstep(0.12, 0.94, luma);
   const chromeMask = saturationMask * toneMask;
   const chromeAmount = uniforms.chromeStrength * chromeMask;
 
-  nr *= 1 - chromeAmount * 0.16;
-  ng *= 1 - chromeAmount * 0.16;
-  nb *= 1 - chromeAmount * 0.16;
+  nr *= 1 - chromeAmount * 0.24;
+  ng *= 1 - chromeAmount * 0.24;
+  nb *= 1 - chromeAmount * 0.24;
 
   const gray = 0.299 * nr + 0.587 * ng + 0.114 * nb;
-  const saturationBoost = 1 + chromeAmount * 0.24;
+  const saturationBoost = 1 + chromeAmount * 0.36;
   nr = gray + (nr - gray) * saturationBoost;
   ng = gray + (ng - gray) * saturationBoost;
   nb = gray + (nb - gray) * saturationBoost;
 
   const blueDominance = clamp(nb - Math.max(nr, ng), 0, 1);
-  const blueMask = smoothstep(0.05, 0.35, blueDominance) * saturationMask;
+  const blueMask = smoothstep(0.03, 0.28, blueDominance) * saturationMask * toneMask;
   const blueAmount = uniforms.chromeBlueStrength * blueMask;
 
-  nb *= 1 + blueAmount * 0.25;
-  nr *= 1 - blueAmount * 0.07;
-  ng *= 1 - blueAmount * 0.04;
-  nr *= 1 - blueAmount * 0.08;
-  ng *= 1 - blueAmount * 0.08;
-  nb *= 1 - blueAmount * 0.08;
+  nb *= 1 + blueAmount * 0.44;
+  nr *= 1 - blueAmount * 0.14;
+  ng *= 1 - blueAmount * 0.1;
+  const blueLumaCompensation = 1 - blueAmount * 0.03;
+  nr *= blueLumaCompensation;
+  ng *= blueLumaCompensation;
+  nb *= blueLumaCompensation;
 
   return [nr, ng, nb];
 }

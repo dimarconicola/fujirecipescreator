@@ -25,6 +25,17 @@ function makeParams(overrides: Partial<ApproxRenderParams> = {}): ApproxRenderPa
   };
 }
 
+function pixelDelta(
+  baseline: [number, number, number],
+  candidate: [number, number, number],
+): number {
+  return (
+    Math.abs(candidate[0] - baseline[0]) +
+    Math.abs(candidate[1] - baseline[1]) +
+    Math.abs(candidate[2] - baseline[2])
+  );
+}
+
 describe("cpu renderer math", () => {
   it("applies wb and tone adjustments while staying clamped", () => {
     const uniforms = buildApproxUniforms(
@@ -55,15 +66,23 @@ describe("cpu renderer math", () => {
     expect(withGrain).not.toEqual(baseline);
   });
 
-  it("changes saturated pixels with color chrome settings", () => {
+  it("produces visible saturated-pixel shifts with color chrome settings", () => {
     const noChromeUniforms = buildApproxUniforms(makeParams({ chrome: "off", chromeBlue: "off" }));
+    const weakChromeUniforms = buildApproxUniforms(
+      makeParams({ chrome: "weak", chromeBlue: "weak" }),
+    );
     const chromeUniforms = buildApproxUniforms(
       makeParams({ chrome: "strong", chromeBlue: "strong" }),
     );
 
     const baseline = applyCpuApproxPixel(0.18, 0.32, 0.9, noChromeUniforms, 0.5);
+    const withWeakChrome = applyCpuApproxPixel(0.18, 0.32, 0.9, weakChromeUniforms, 0.5);
     const withChrome = applyCpuApproxPixel(0.18, 0.32, 0.9, chromeUniforms, 0.5);
+    const weakDelta = pixelDelta(baseline, withWeakChrome);
+    const strongDelta = pixelDelta(baseline, withChrome);
 
-    expect(withChrome).not.toEqual(baseline);
+    expect(weakDelta).toBeGreaterThan(0.015);
+    expect(strongDelta).toBeGreaterThan(0.04);
+    expect(strongDelta).toBeGreaterThan(weakDelta);
   });
 });
