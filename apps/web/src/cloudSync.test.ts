@@ -43,14 +43,14 @@ describe("cloud sync", () => {
     await pushSnapshotToGithubGist(
       {
         token: "token-123",
-        gistId: "gist-123",
+        gistId: "https://gist.github.com/demo-user/1a2b3c4d5e6f7a8b9c0d",
       },
       baseSnapshot,
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain("/gists/gist-123");
+    expect(url).toContain("/gists/1a2b3c4d5e6f7a8b9c0d");
     expect(init.method).toBe("PATCH");
 
     const payload = JSON.parse(String(init.body)) as {
@@ -85,7 +85,7 @@ describe("cloud sync", () => {
 
     const pulled = await pullSnapshotFromGithubGist({
       token: "token-123",
-      gistId: "gist-123",
+      gistId: "1a2b3c4d5e6f7a8b9c0d",
     });
 
     const snapshot = pulled as RecipeStoreSnapshot;
@@ -99,10 +99,32 @@ describe("cloud sync", () => {
       pushSnapshotToGithubGist(
         {
           token: "",
-          gistId: "gist-123",
+          gistId: "1a2b3c4d5e6f7a8b9c0d",
         },
         baseSnapshot,
       ),
     ).rejects.toThrow("token is required");
+  });
+
+  it("rejects sync when gist ID is invalid", async () => {
+    await expect(
+      pullSnapshotFromGithubGist({
+        token: "token-123",
+        gistId: "not-a-valid-gist-id",
+      }),
+    ).rejects.toThrow("gist ID is invalid");
+  });
+
+  it("rejects sync when filename includes path separators", async () => {
+    await expect(
+      pushSnapshotToGithubGist(
+        {
+          token: "token-123",
+          gistId: "1a2b3c4d5e6f7a8b9c0d",
+          filename: "../bad.json",
+        },
+        baseSnapshot,
+      ),
+    ).rejects.toThrow("filename must not include path separators");
   });
 });

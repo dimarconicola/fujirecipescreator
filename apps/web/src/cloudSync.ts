@@ -20,20 +20,58 @@ type GistResponse = {
   message?: string;
 };
 
+const GIST_ID_PATTERN = /^[a-f0-9]{8,64}$/i;
+
+function normalizeFilename(filenameInput?: string): string {
+  const filename = (filenameInput ?? DEFAULT_SYNC_FILENAME).trim() || DEFAULT_SYNC_FILENAME;
+  if (filename.includes("/") || filename.includes("\\")) {
+    throw new Error("Cloud sync filename must not include path separators.");
+  }
+  return filename;
+}
+
+function normalizeGistId(gistIdInput: string): string {
+  const trimmed = gistIdInput.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  let candidate = trimmed;
+  try {
+    const parsedUrl = new URL(trimmed);
+    const pathSegments = parsedUrl.pathname.split("/").filter(Boolean);
+    candidate = pathSegments[pathSegments.length - 1] ?? "";
+  } catch {
+    // Input is not a URL; keep raw candidate.
+  }
+
+  if (candidate.includes("/")) {
+    const pathSegments = candidate.split("/").filter(Boolean);
+    candidate = pathSegments[pathSegments.length - 1] ?? candidate;
+  }
+
+  const normalized = candidate.replace(/\.git$/i, "").trim();
+  if (!GIST_ID_PATTERN.test(normalized)) {
+    throw new Error("Cloud sync gist ID is invalid. Provide a gist ID or gist URL.");
+  }
+
+  return normalized;
+}
+
 function normalizeConfig(config: GithubGistSyncConfig): {
   token: string;
   gistId: string;
   filename: string;
 } {
   const token = config.token.trim();
-  const gistId = config.gistId.trim();
-  const filename = (config.filename ?? DEFAULT_SYNC_FILENAME).trim() || DEFAULT_SYNC_FILENAME;
+  const gistId = normalizeGistId(config.gistId);
+  const filename = normalizeFilename(config.filename);
 
   if (!token) {
     throw new Error("Cloud sync token is required.");
   }
 
-  if (!gistId) {
+  if (!gistId.trim()) {
     throw new Error("Cloud sync gist ID is required.");
   }
 

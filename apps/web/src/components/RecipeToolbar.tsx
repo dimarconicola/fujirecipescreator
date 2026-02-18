@@ -385,7 +385,7 @@ export function RecipeToolbar({
               style={cloudInputStyle}
               value={cloudGistId}
               onChange={(event) => setCloudGistId(event.target.value)}
-              placeholder="gist id"
+              placeholder="gist id or URL"
             />
           </div>
           <div style={rowStyle}>

@@ -296,8 +296,11 @@ Cloud sync:
 - GitHub Gist `PATCH` for push, `GET` for pull
 - config fields:
   - token
-  - gist ID
+  - gist ID (or gist URL, normalized at runtime)
   - filename (default `fuji-recipes-sync-v1.json`)
+- validation:
+  - gist input must normalize to a hex gist ID
+  - filename must not include path separators
 - pulled payload supports wrapper format:
   - `{ version: 1, exported_at, data }`
   - or raw snapshot object

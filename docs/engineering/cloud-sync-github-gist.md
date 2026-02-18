@@ -1,6 +1,6 @@
 # Cloud Sync (GitHub Gist)
 
-Date: 2026-02-17
+Date: 2026-02-18
 
 ## Scope
 
@@ -18,7 +18,7 @@ This implementation provides account-backed cloud recipe sync for the web app us
 - Location: `/Users/nicoladimarco/code/fujirecipescreator/apps/web/src/components/RecipeToolbar.tsx`
 - Section: `Cloud Sync (GitHub Gist)`
 - Inputs:
-  - Gist ID
+  - Gist ID or Gist URL (normalized to gist ID)
   - File name (default `fuji-recipes-sync-v1.json`)
   - GitHub token (password field)
 - Actions:
@@ -30,6 +30,7 @@ This implementation provides account-backed cloud recipe sync for the web app us
 1. Token is held in component state only and is not persisted to local storage.
 2. Use a fine-grained token scoped only to required gist permissions.
 3. Rotate token if exposed.
+4. Filename input rejects path separators (`/`, `\`) to avoid accidental path-like values.
 
 ## Data Format
 
@@ -50,6 +51,12 @@ Versioned envelope:
 
 Legacy fallback behavior:
 - Pull can also ingest a raw snapshot object without envelope when present.
+
+Validation behavior:
+- Empty token is rejected.
+- Gist input can be ID or URL, but must normalize to a hex gist identifier.
+- Empty gist input is rejected.
+- Filename defaults to `fuji-recipes-sync-v1.json` when blank.
 
 ## Validation and Tests
 
