@@ -329,7 +329,17 @@ export function PresetGallery({ onApplyPreset, onSelectImage }: PresetGalleryPro
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />
-          <small style={telemetryStyle} data-testid="preset-render-status">
+          <small
+            style={telemetryStyle}
+            data-testid="preset-render-status"
+            data-render-phase={previewTelemetry.phase}
+            data-rendered-count={previewTelemetry.renderedCount}
+            data-total-count={previewTelemetry.totalCount}
+            data-chunk-count={previewTelemetry.chunkCount}
+            data-avg-chunk-ms={formatTelemetryValue(previewTelemetry.avgChunkMs)}
+            data-max-chunk-ms={formatTelemetryValue(previewTelemetry.maxChunkMs)}
+            data-total-ms={formatTelemetryValue(previewTelemetry.totalMs)}
+          >
             {previewTelemetry.phase === "idle"
               ? "Preview render idle (opens lazily)."
               : previewTelemetry.phase === "rendering"
