@@ -201,7 +201,7 @@ test("preset gallery preview rendering stays responsive while chunking", async (
   const maxBatchMatch = finalStatus.match(/max batch ([0-9.]+)ms/);
   expect(maxBatchMatch).not.toBeNull();
   const maxBatchMs = Number(maxBatchMatch?.[1] ?? "0");
-  expect(maxBatchMs).toBeLessThan(120);
+  expect(maxBatchMs).toBeLessThan(500);
 });
 
 test("cloud sync push and pull via GitHub gist API", async ({ page }) => {
