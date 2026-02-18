@@ -53,6 +53,7 @@ Core path checks:
 15. Preset preview responsiveness checks assert chunked rendering telemetry (`chunks`, `avg`, `max batch`, `total`) from machine-readable status attributes against browser-specific budgets.
 16. Viewer keyboard accessibility covers focus-revealed controls, keyboard zoom/reset, and keyboard hold-before preview.
 17. Engine-level renderer tests assert Color Chrome settings generate measurable saturated-pixel deltas (beyond binary changed/unchanged checks).
+18. Cloud sync e2e validates push/pull action buttons stay disabled until token + gist input are provided, then complete mocked push/pull successfully.
 
 ## Environment Notes
 

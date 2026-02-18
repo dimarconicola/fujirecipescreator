@@ -23,6 +23,20 @@ describe("parameter store", () => {
     expect(store.getState().params.wb_shift).toEqual(defaultProfile.defaults.wb_shift);
   });
 
+  it("prevents direct param changes while a param is locked", () => {
+    const store = createParameterStore();
+
+    store.getState().setParam("highlight", 2);
+    store.getState().toggleLock("highlight");
+    store.getState().setParam("highlight", -2);
+
+    expect(store.getState().params.highlight).toBe(2);
+
+    store.getState().toggleLock("highlight");
+    store.getState().setParam("highlight", -2);
+    expect(store.getState().params.highlight).toBe(-2);
+  });
+
   it("preserves locked values when applying a new compatible profile", () => {
     const store = createParameterStore();
     store.getState().setParam("highlight", 3);

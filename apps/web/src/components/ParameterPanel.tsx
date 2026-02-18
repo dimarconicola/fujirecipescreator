@@ -162,6 +162,7 @@ export function ParameterPanel({
                     <select
                       id={controlId}
                       value={String(params[control.key])}
+                      disabled={locks[control.key]}
                       onChange={(event) =>
                         setTypedParam(
                           control.key,
@@ -208,6 +209,7 @@ export function ParameterPanel({
                       max={control.max}
                       step={control.step ?? 1}
                       value={value}
+                      disabled={locks[control.key]}
                       onChange={(event) =>
                         setTypedParam(
                           control.key,
@@ -243,6 +245,7 @@ export function ParameterPanel({
                     min={control.minA}
                     max={control.maxA}
                     value={params.wb_shift.a_b}
+                    disabled={locks.wb_shift}
                     onChange={(event) => setWbShift("a_b", Number(event.target.value))}
                   />
                   <div style={wbAxisRowStyle}>
@@ -255,6 +258,7 @@ export function ParameterPanel({
                     min={control.minR}
                     max={control.maxR}
                     value={params.wb_shift.r_b}
+                    disabled={locks.wb_shift}
                     onChange={(event) => setWbShift("r_b", Number(event.target.value))}
                   />
                 </div>

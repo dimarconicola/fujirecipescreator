@@ -222,6 +222,10 @@ export function createParameterStore(initialProfile: Profile = defaultProfile) {
     },
     compatibilityIssues: buildCompatibilityMessages(initialProfile, initialParams),
     setParam: (key, value) => {
+      if (get().locks[key]) {
+        return;
+      }
+
       set((state) => {
         const normalizedValue = normalizeParamValue(state.profile, key, value);
         const nextParams = setParamValue(state.params, key, normalizedValue);

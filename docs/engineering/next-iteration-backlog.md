@@ -59,6 +59,7 @@ Decision note (2026-02-17):
 - NI-018 added Playwright screenshot baselines for split-divider + hover-control states across Chromium/Firefox/WebKit.
 - NI-019 replaced split compare `clip-path` cropping with a mask-container implementation to reduce drag jitter/glitch artifacts across browsers.
 - NI-020 strengthened Color Chrome / Color Chrome Blue response curves (CPU + WebGL parity) and tightened renderer tests to assert perceptible chroma shift magnitude.
+- NI-021 enforced parameter lock behavior for direct manual edits and disabled locked controls in the parameter panel UI.
 
 ## P2: Performance and UX Refinement
 
@@ -70,6 +71,7 @@ Decision note (2026-02-17):
 | NI-018 | P2 | Add visual baselines for split divider and hover controls in all three browsers. | QA | M | NI-011 | Snapshot or screenshot checks catch split jitter/overlay regressions before merge. | done |
 | NI-019 | P2 | Stabilize split compare rendering by replacing clip-path cropping with overflow mask composition. | Frontend | S | NI-011, NI-018 | Split drag remains visually stable in Chromium/Firefox/WebKit without clip jitter or tearing. | done |
 | NI-020 | P2 | Increase Color Chrome perceptibility and enforce effect-size regression checks. | Rendering/QA | M | NI-010 | Strong Chrome settings produce a measurable saturated-pixel delta in tests and aligned CPU/WebGL behavior. | done |
+| NI-021 | P2 | Make parameter locks authoritative for direct edits and expose lock state in control disablement. | Frontend/State | S | NI-011 | Locked parameters cannot be changed through sliders/selects, and unit tests cover lock enforcement. | done |
 
 ## Sequence Recommendation
 
@@ -83,6 +85,8 @@ Decision note (2026-02-17):
 - NI-013, NI-014, NI-015, NI-016, NI-017, NI-018
 4. Sprint D (UX/Color Hardening)
 - NI-019, NI-020
+5. Sprint E (State Integrity)
+- NI-021
 
 ## Exit Criteria for This Backlog
 
