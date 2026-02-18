@@ -44,7 +44,7 @@ Scope: Stabilization + product-contract alignment after latest UX/render updates
 | NI-011 | P1 | Add targeted interaction tests for viewer behavior (hover zoom controls, long-press before, split drag). | QA/Frontend | M | NI-003 | Automated tests assert critical pointer interactions and prevent regressions on reported UX bugs. | done |
 | NI-012 | P1 | Add e2e coverage for share-link restoration with model migration cases. | QA | M | NI-004 | E2E validates both same-profile restore and cross-profile fallback mapping behavior. | done |
 | NI-013 | P1 | Expand CI to run acceptance gate (`test:acceptance`) on PRs or scheduled workflow. | DevOps/QA | M | NI-011, NI-012 | CI fails on e2e regressions, not only unit/build regressions. | done |
-| NI-014 | P1 | Correct CI branch triggers to include the active default branch policy. | DevOps | S | none | `.github/workflows/ci.yml` triggers are aligned with active branch strategy and verified by test PR. | in_progress |
+| NI-014 | P1 | Correct CI branch triggers to include the active default branch policy. | DevOps | S | none | `.github/workflows/ci.yml` triggers are aligned with active branch strategy and verified by test PR. | done |
 
 Decision note (2026-02-17):
 - NI-007 selected the procedural-only renderer contract (see `docs/engineering/renderer-contract-v1.md`), so NI-008 is blocked unless product direction changes to LUT-assisted rendering.
@@ -52,7 +52,7 @@ Decision note (2026-02-17):
 - NI-011 added explicit Playwright coverage for hover zoom controls, long-press before preview, and split-divider drag behavior.
 - NI-012 added explicit Playwright share-link restoration coverage for same-profile and legacy-profile migration flows.
 - NI-013 wired `test:acceptance` into CI after Playwright browser installation.
-- NI-014 trigger alignment now covers `master`, `main`, and `codex/**`, with regression guard test `apps/web/src/ciWorkflow.test.ts`; probe branches are published and PR-trigger verification is pending.
+- NI-014 verified via PR #1 (`codex/ci-trigger-probe -> main`) with successful `pull_request` CI run: https://github.com/dimarconicola/fujirecipescreator/actions/runs/22131422404.
 - NI-015 completed with lazy + chunked preset preview rendering, telemetry, and Playwright responsiveness coverage across Chromium/Firefox/WebKit.
 - NI-016 removed unused slider sweep component/logic/tests from the codebase.
 - NI-017 added a dedicated footer QA diagnostics line with renderer mode, model/profile, compare mode, image, and zoom context.

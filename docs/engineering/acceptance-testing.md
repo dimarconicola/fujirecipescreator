@@ -69,7 +69,13 @@ CI trigger policy lives in `/Users/nicoladimarco/code/fujirecipescreator/.github
 Verification checklist (remote GitHub):
 
 1. Create a test branch from default branch: `codex/ci-trigger-probe`.
-2. Push a no-op commit and open a PR into the default branch (`master` in current local repo state).
+2. Push a no-op commit and open a PR into default branch `main`.
 3. Confirm a `CI` workflow run is created from `pull_request` event and executes acceptance gate.
 4. Confirm run succeeds (typecheck, build, Playwright install, `test:acceptance`).
 5. Record run URL in QA log and close/merge probe PR.
+
+Verification result (2026-02-17):
+
+1. Probe PR: https://github.com/dimarconicola/fujirecipescreator/pull/1
+2. `pull_request` CI run: https://github.com/dimarconicola/fujirecipescreator/actions/runs/22131422404
+3. Conclusion: success
