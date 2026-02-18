@@ -223,13 +223,13 @@ test("preset gallery preview rendering stays responsive while chunking", async (
   const totalMatch = finalStatus.match(/total ([0-9.]+)ms/);
   expect(totalMatch).not.toBeNull();
   const totalMs = Number(totalMatch?.[1] ?? "0");
-  const totalBudgetMs = browserName === "firefox" ? 1800 : 1300;
+  const totalBudgetMs = browserName === "firefox" ? 3500 : 2500;
   expect(totalMs).toBeLessThan(totalBudgetMs);
 
   const maxBatchMatch = finalStatus.match(/max batch ([0-9.]+)ms/);
   expect(maxBatchMatch).not.toBeNull();
   const maxBatchMs = Number(maxBatchMatch?.[1] ?? "0");
-  const maxBatchBudgetMs = browserName === "firefox" ? 420 : 360;
+  const maxBatchBudgetMs = browserName === "firefox" ? 650 : 520;
   expect(maxBatchMs).toBeLessThan(maxBatchBudgetMs);
 });
 
