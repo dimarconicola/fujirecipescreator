@@ -154,6 +154,15 @@ test("viewer interactions: hover zoom controls, hold-before preview, split drag"
   await page.mouse.up();
   await expect(page.getByTestId("viewer-before-layer")).toHaveCount(0);
 
+  const zoomValue = page.getByTestId("viewer-zoom-value");
+  await expect(zoomValue).toContainText("1.00x");
+  await page.getByTestId("viewer-zoom-in").click();
+  const zoomAfterInText = (await zoomValue.textContent()) ?? "0x";
+  const zoomAfterIn = Number(zoomAfterInText.replace("x", ""));
+  expect(zoomAfterIn).toBeGreaterThan(1);
+  await page.getByTestId("viewer-zoom-reset").click();
+  await expect(zoomValue).toContainText("1.00x");
+
   await page.getByRole("button", { name: "Split Screen: Off" }).click();
   const splitDivider = page.getByTestId("viewer-split-divider");
   await expect(splitDivider).toBeVisible();
