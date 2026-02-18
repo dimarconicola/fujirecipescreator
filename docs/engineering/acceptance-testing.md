@@ -48,6 +48,7 @@ Core path checks:
 10. Cloud sync push/pull flow works against mocked GitHub Gist APIs.
 11. Footer exposes a QA diagnostics status line with renderer/model/compare context.
 12. Cross-browser viewport screenshot baselines cover split-divider + hover-control states.
+13. Screenshot baseline assertions are pinned to macOS snapshot artifacts and are skipped on non-darwin runners.
 
 ## Environment Notes
 
