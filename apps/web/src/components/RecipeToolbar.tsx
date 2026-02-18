@@ -24,13 +24,16 @@ type RecipeToolbarProps = {
 };
 
 const toolbarStyle: CSSProperties = {
-  border: "1px solid #d8d8d8",
-  borderRadius: "12px",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-lg)",
   marginTop: "16px",
   padding: "12px",
-  backgroundColor: "#fcfcfc",
+  background:
+    "linear-gradient(180deg, rgba(20, 29, 41, 0.98), rgba(14, 21, 31, 0.98))",
   display: "grid",
   gap: "10px",
+  color: "var(--ui-text-1)",
+  boxShadow: "0 20px 42px rgba(0, 0, 0, 0.28)",
 };
 
 const rowStyle: CSSProperties = {
@@ -45,10 +48,10 @@ const selectStyle: CSSProperties = {
 };
 
 const cloudDetailsStyle: CSSProperties = {
-  border: "1px solid #d8d8d8",
-  borderRadius: "10px",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-md)",
   padding: "8px 10px",
-  backgroundColor: "#ffffff",
+  backgroundColor: "rgba(12, 19, 27, 0.68)",
 };
 
 const cloudFieldsStyle: CSSProperties = {
@@ -59,6 +62,13 @@ const cloudFieldsStyle: CSSProperties = {
 
 const cloudInputStyle: CSSProperties = {
   minWidth: "260px",
+};
+
+const cloudSummaryStyle: CSSProperties = {
+  color: "var(--ui-text-0)",
+  fontWeight: 600,
+  cursor: "pointer",
+  letterSpacing: "0.02em",
 };
 
 function formatSlotTime(isoString: string): string {
@@ -377,7 +387,7 @@ export function RecipeToolbar({
       </div>
 
       <details style={cloudDetailsStyle}>
-        <summary>Cloud Sync (GitHub Gist)</summary>
+        <summary style={cloudSummaryStyle}>Cloud Sync (GitHub Gist)</summary>
         <div style={cloudFieldsStyle}>
           <div style={rowStyle}>
             <label htmlFor="cloud-gist-id">Gist ID</label>

@@ -2,17 +2,22 @@ import type { CSSProperties } from "react";
 import { imageCredits, lutCredits } from "../data/credits";
 
 const panelStyle: CSSProperties = {
-  border: "1px solid #d8d8d8",
-  borderRadius: "12px",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-lg)",
   marginTop: "16px",
   overflow: "hidden",
+  background:
+    "linear-gradient(180deg, rgba(20, 29, 41, 0.98), rgba(14, 21, 31, 0.98))",
+  color: "var(--ui-text-1)",
 };
 
 const summaryStyle: CSSProperties = {
   padding: "12px 14px",
   fontWeight: 600,
   cursor: "pointer",
-  backgroundColor: "#fafafa",
+  color: "var(--ui-text-0)",
+  backgroundColor: "rgba(9, 14, 21, 0.62)",
+  borderBottom: "1px solid rgba(48, 68, 89, 0.62)",
 };
 
 const bodyStyle: CSSProperties = {

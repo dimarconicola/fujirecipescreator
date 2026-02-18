@@ -59,6 +59,12 @@ const rootStyle: CSSProperties = {
   gap: "4px",
   alignContent: "start",
   alignSelf: "start",
+  border: "1px solid var(--ui-border-soft)",
+  borderRadius: "var(--ui-radius-lg)",
+  padding: "10px",
+  background:
+    "linear-gradient(180deg, rgba(20, 30, 43, 0.98), rgba(14, 21, 31, 0.98))",
+  boxShadow: "0 20px 42px rgba(0, 0, 0, 0.38)",
 };
 
 const tabsStyle: CSSProperties = {
@@ -70,10 +76,11 @@ const tabsStyle: CSSProperties = {
 const viewportStyle: CSSProperties = {
   position: "relative",
   height: "540px",
-  border: "1px solid #d8d8d8",
+  border: "1px solid var(--ui-border-soft)",
   borderRadius: "12px",
   overflow: "hidden",
-  backgroundColor: "#111",
+  background:
+    "radial-gradient(600px 220px at 50% -5%, rgba(79, 209, 255, 0.12), transparent 68%), #090e14",
   touchAction: "none",
 };
 
@@ -89,9 +96,9 @@ const layerStyleBase: CSSProperties = {
 };
 
 const tabButtonStyle: CSSProperties = {
-  border: "1px solid #d4d4d4",
+  border: "1px solid transparent",
   borderRadius: "6px",
-  backgroundColor: "#fff",
+  backgroundColor: "rgba(15, 22, 32, 0.95)",
   padding: "3px",
   display: "grid",
   width: "64px",
@@ -102,8 +109,8 @@ const tabButtonStyle: CSSProperties = {
 
 const activeTabStyle: CSSProperties = {
   ...tabButtonStyle,
-  borderColor: "#161616",
-  boxShadow: "0 0 0 1px #161616 inset",
+  borderColor: "rgba(79, 209, 255, 0.85)",
+  boxShadow: "0 0 0 1px rgba(79, 209, 255, 0.42) inset",
 };
 
 const tabImageStyle: CSSProperties = {
@@ -118,8 +125,8 @@ const splitDividerStyle: CSSProperties = {
   top: 0,
   bottom: 0,
   width: "2px",
-  backgroundColor: "rgba(255,255,255,0.95)",
-  boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
+  backgroundColor: "rgba(79, 209, 255, 0.92)",
+  boxShadow: "0 0 0 1px rgba(8, 25, 35, 0.72)",
   cursor: "col-resize",
   pointerEvents: "auto",
 };
@@ -135,12 +142,13 @@ const splitAfterMaskBaseStyle: CSSProperties = {
 
 const zoomOverlayStyle: CSSProperties = {
   position: "absolute",
-  left: "12px",
-  bottom: "12px",
+  left: "50%",
+  top: "14px",
+  transform: "translateX(-50%)",
   zIndex: 6,
   borderRadius: "999px",
-  border: "1px solid rgba(255,255,255,0.35)",
-  backgroundColor: "rgba(12, 12, 12, 0.74)",
+  border: "1px solid rgba(79, 209, 255, 0.45)",
+  backgroundColor: "rgba(8, 14, 20, 0.84)",
   color: "#ffffff",
   display: "flex",
   alignItems: "center",
@@ -153,8 +161,8 @@ const zoomButtonStyle: CSSProperties = {
   width: "28px",
   height: "28px",
   borderRadius: "999px",
-  border: "1px solid rgba(255,255,255,0.35)",
-  backgroundColor: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(79, 209, 255, 0.35)",
+  backgroundColor: "rgba(79, 209, 255, 0.09)",
   color: "#fff",
   fontWeight: 700,
   lineHeight: 1,
@@ -177,6 +185,7 @@ const zoomLabelStyle: CSSProperties = {
   textAlign: "center",
   fontSize: "12px",
   fontWeight: 600,
+  letterSpacing: "0.02em",
 };
 
 const INTERACTIVE_RESOLUTION_SCALE = 0.6;

@@ -1,4 +1,21 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Group,
+  List,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import {
+  IconAlertTriangle,
+  IconBook2,
+  IconRestore,
+} from "@tabler/icons-react";
 import { useParameterStore } from "./state/parameterStore";
 import { ImageViewer } from "./components/ImageViewer";
 import { ParameterPanel } from "./components/ParameterPanel";
@@ -12,69 +29,6 @@ import { approvedLuts, blockedLuts, resolveActiveLut } from "./data/luts";
 import { resolveProfile } from "./data/profiles";
 import { defaultTransform, useViewerStore } from "./state/viewerStore";
 import { decodeSharePayloadFromSearch } from "./shareLink";
-
-const containerStyle: CSSProperties = {
-  margin: "0 auto",
-  width: "100%",
-  maxWidth: "1380px",
-  boxSizing: "border-box",
-  padding: "clamp(12px, 2vw, 24px)",
-  fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
-  color: "#161616",
-};
-
-const noticeStyle: CSSProperties = {
-  border: "1px solid #d8d8d8",
-  borderRadius: "12px",
-  padding: "16px",
-  marginTop: "16px",
-  backgroundColor: "#fafafa",
-};
-
-const headerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "12px",
-};
-
-const headerActionsStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  flexWrap: "wrap",
-};
-
-const noticeActionsStyle: CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  flexWrap: "wrap",
-  marginTop: "10px",
-};
-
-const layoutStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 7fr) minmax(300px, 3fr)",
-  gap: "16px",
-  marginTop: "16px",
-  alignItems: "start",
-};
-
-const compactLayoutStyle: CSSProperties = {
-  ...layoutStyle,
-  gridTemplateColumns: "minmax(0, 1fr)",
-};
-
-const footerStyle: CSSProperties = {
-  borderTop: "1px solid #d8d8d8",
-  marginTop: "18px",
-  paddingTop: "12px",
-  display: "grid",
-  gap: "6px",
-  fontSize: "13px",
-  color: "#353535",
-  overflowWrap: "anywhere",
-};
 
 const MODEL_OPTIONS = [
   { id: "xtrans5", label: "X-T5 / X-H2 / X-S20" },
@@ -129,7 +83,6 @@ export function App() {
   const [isLearnOpen, setIsLearnOpen] = useState(false);
   const [renderStatus, setRenderStatus] = useState("Initializing renderer...");
   const [rendererMode, setRendererMode] = useState<ViewerRendererMode>("webgl2");
-  const [isCompactLayout, setIsCompactLayout] = useState(false);
 
   const handleProfileChange = (
     nextProfileId: string,
@@ -164,33 +117,6 @@ export function App() {
   const lutLegalGateText = activeLut
     ? `Approved LUT catalog entry: ${activeLut.lut_id} (${activeLut.source}). Runtime rendering remains procedural-only in v1 (LUT files are not applied). ${blockedLuts.length} manifest entries are blocked by legal policy.`
     : `No profile-specific approved LUT entry is available. ${approvedLuts.length} approved fallback manifest entries are currently detected, but runtime rendering remains procedural-only in v1 (LUT files are not applied).`;
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia("(max-width: 1180px)");
-    const syncLayoutMode = () => {
-      setIsCompactLayout(mediaQuery.matches);
-    };
-
-    syncLayoutMode();
-    const supportsModernListener = typeof mediaQuery.addEventListener === "function";
-    if (supportsModernListener) {
-      mediaQuery.addEventListener("change", syncLayoutMode);
-    } else {
-      mediaQuery.addListener(syncLayoutMode);
-    }
-
-    return () => {
-      if (supportsModernListener) {
-        mediaQuery.removeEventListener("change", syncLayoutMode);
-      } else {
-        mediaQuery.removeListener(syncLayoutMode);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const visibleProfileId = resolveVisibleModelId(profileId);
@@ -266,43 +192,71 @@ export function App() {
   }, [applyProfile, replaceParams, selectImage]);
 
   return (
-    <main style={containerStyle}>
-      <header style={headerStyle}>
-        <h1>Fuji Recipe Lab</h1>
-        <div style={headerActionsStyle}>
-          <button type="button" onClick={() => setIsLearnOpen(true)}>
-            Learn
-          </button>
-          <ApproxDisclosureBadge />
-        </div>
-      </header>
+    <main className="app-main">
+      <Paper className="app-header panel-surface" component="header">
+        <Group justify="space-between" gap="sm" wrap="nowrap">
+          <Title order={1}>Fuji Recipe Lab</Title>
+          <Group className="app-header-actions" gap="xs">
+            <Button
+              variant="light"
+              color="cyan"
+              leftSection={<IconBook2 size={16} />}
+              onClick={() => setIsLearnOpen(true)}
+            >
+              Learn
+            </Button>
+            <ApproxDisclosureBadge />
+          </Group>
+        </Group>
+      </Paper>
+
+      <Text className="landscape-hint">
+        This workspace is optimized for landscape desktop and iPad layout.
+      </Text>
+
       {shareLoadStatus ? (
-        <section style={noticeStyle}>
-          <strong>Share Restore:</strong> {shareLoadStatus}
-          <div style={noticeActionsStyle}>
-            <button type="button" onClick={recoverState}>
-              Recover Safe Defaults
-            </button>
-          </div>
-        </section>
-      ) : null}
-      {compatibilityIssues.length > 0 ? (
-        <section style={noticeStyle}>
-          <strong>State Compatibility Warning:</strong>
-          <ul>
-            {compatibilityIssues.slice(0, 3).map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </ul>
-          <div style={noticeActionsStyle}>
-            <button type="button" onClick={recoverState}>
-              Reset Invalid State
-            </button>
-          </div>
-        </section>
+        <Alert
+          className="app-notice"
+          variant="light"
+          color="cyan"
+          title="Share Restore"
+          icon={<IconRestore size={16} />}
+        >
+          <Stack gap="xs">
+            <Text size="sm">{shareLoadStatus}</Text>
+            <Group className="app-notice__actions">
+              <Button type="button" size="xs" onClick={recoverState}>
+                Recover Safe Defaults
+              </Button>
+            </Group>
+          </Stack>
+        </Alert>
       ) : null}
 
-      <section style={isCompactLayout ? compactLayoutStyle : layoutStyle}>
+      {compatibilityIssues.length > 0 ? (
+        <Alert
+          className="app-notice"
+          variant="light"
+          color="red"
+          title="State Compatibility Warning"
+          icon={<IconAlertTriangle size={16} />}
+        >
+          <Stack gap="xs">
+            <List spacing={4} size="sm">
+              {compatibilityIssues.slice(0, 3).map((issue) => (
+                <List.Item key={issue}>{issue}</List.Item>
+              ))}
+            </List>
+            <Group className="app-notice__actions">
+              <Button type="button" size="xs" color="red" onClick={recoverState}>
+                Reset Invalid State
+              </Button>
+            </Group>
+          </Stack>
+        </Alert>
+      ) : null}
+
+      <section className="workspace-grid">
         <ImageViewer
           images={canonicalImages}
           selectedImageId={selectedImageId}
@@ -328,6 +282,7 @@ export function App() {
           onSetCompareMode={setCompareMode}
         />
       </section>
+
       <RecipeToolbar
         profileId={profileId}
         baseImageId={selectedImageId}
@@ -338,6 +293,7 @@ export function App() {
         onResetAllParams={resetAllParams}
         onRandomizeSafe={randomizeWithinSafeBounds}
       />
+
       <PresetGallery onApplyPreset={replaceParams} onSelectImage={selectImage} />
       <CreditsPanel />
       <LearnOverlay
@@ -346,25 +302,27 @@ export function App() {
         onApplyPreset={replaceParams}
         onClose={() => setIsLearnOpen(false)}
       />
-      <footer style={footerStyle}>
-        <div>
+
+      <Paper className="app-footer panel-surface" component="footer" p="sm">
+        <Text size="xs">
           Educational, approximate visualizer for recipe exploration. It does not emulate
           Fujifilm camera JPEG output.
-        </div>
-        <div>
+        </Text>
+        <Text size="xs">
           <strong>Approx Disclosure:</strong> This app is an approximate visualizer for
           learning and does not emulate camera JPEG output.
-        </div>
-        <div>
+        </Text>
+        <Text size="xs">
           <strong>LUT Legal Gate:</strong> {lutLegalGateText}
-        </div>
-        <div>
+        </Text>
+        <Text size="xs">
           <strong>Render Status:</strong> {renderStatus}
-        </div>
-        <div>
+        </Text>
+        <Text size="xs">
           <strong>QA Diagnostics:</strong> {qaDiagnostics}
-        </div>
-      </footer>
+        </Text>
+      </Paper>
     </main>
   );
 }
+

@@ -15,7 +15,7 @@ const overlayRootStyle: CSSProperties = {
   zIndex: 40,
   display: "grid",
   placeItems: "center",
-  backgroundColor: "rgba(0, 0, 0, 0.45)",
+  backgroundColor: "rgba(4, 8, 14, 0.74)",
   padding: "16px",
 };
 
@@ -24,8 +24,10 @@ const panelStyle: CSSProperties = {
   maxHeight: "90vh",
   overflow: "auto",
   borderRadius: "14px",
-  border: "1px solid #d8d8d8",
-  backgroundColor: "#fff",
+  border: "1px solid var(--ui-border-soft)",
+  background:
+    "linear-gradient(180deg, rgba(21, 31, 45, 0.98), rgba(14, 22, 34, 0.98))",
+  color: "var(--ui-text-1)",
   padding: "18px",
   display: "grid",
   gap: "16px",
@@ -37,11 +39,12 @@ const sectionStyle: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  border: "1px solid #ececec",
+  border: "1px solid var(--ui-border-soft)",
   borderRadius: "10px",
   padding: "10px",
   display: "grid",
   gap: "6px",
+  backgroundColor: "rgba(12, 19, 27, 0.74)",
 };
 
 const footerStyle: CSSProperties = {

@@ -1,7 +1,14 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+import "@fontsource-variable/manrope";
+import "@fontsource/space-grotesk/500.css";
+import "@fontsource/space-grotesk/600.css";
+import "./theme.css";
 import { App } from "./App";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
+import { appTheme } from "./theme";
 
 const rootElement = document.getElementById("root");
 
@@ -11,8 +18,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <React.StrictMode>
-    <AppErrorBoundary>
-      <App />
-    </AppErrorBoundary>
+    <MantineProvider theme={appTheme} defaultColorScheme="dark">
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
+    </MantineProvider>
   </React.StrictMode>,
 );

@@ -6,3 +6,4 @@ coverage
 .playwright-browsers/
 playwright-report/
 test-results/
+UIPROPOSAL/
