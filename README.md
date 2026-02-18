@@ -9,10 +9,11 @@ It does **not** emulate Fujifilm in-camera JPEG output.
 - 3 canonical images with quick thumbnail switching.
 - Camera model selector (`xtrans5`, `xtrans3`) with legacy import/share mapping for `xtrans4`.
 - Parameter panel generated from profile contracts.
+- Parameter locks are enforced for direct edits (locked controls are disabled).
 - Press-and-hold before preview and split screen compare.
 - Hover-only in-view zoom controls (+ / - / reset).
 - Recipe lifecycle: save, duplicate, A/B slots, copy text export, copy JSON export, share link.
-- Optional cloud sync via GitHub Gist push/pull.
+- Optional cloud sync via GitHub Gist push/pull (accepts gist ID or gist URL with input validation and trusted raw-host checks).
 - Credits/attribution and LUT legal manifest visibility.
 
 ## Monorepo Layout
@@ -69,4 +70,3 @@ See:
 - `docs/engineering/technical-spec.md`
 - `docs/engineering/renderer-contract-v1.md`
 - `docs/engineering/next-iteration-backlog.md`
-
