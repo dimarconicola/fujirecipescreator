@@ -195,7 +195,7 @@ Update this table at least twice weekly (mid-week and end-week).
 | NI-032 | W9 | Frontend/Domain | 2026-04-20 | 2026-04-24 | 2026-02-19 | done | Local photo import MVP shipped with MakerNotes parsing, mapping report UI, and tests (`apps/web/src/photoImport.ts`, `apps/web/src/components/RecipeToolbar.tsx`). |
 | NI-033 | W9-W10 | Product/Docs/QA | 2026-04-22 | 2026-04-30 | 2026-02-19 | done | Ledger baseline and automated provenance validation shipped (`docs/research/asset-provenance-ledger-v1.md`, `scripts/verify-provenance.mjs`, `npm run verify:provenance`). |
 | NI-034 | W10 | R&D | 2026-04-27 | 2026-05-01 | 2026-02-19 | done | Camera-connectivity feasibility memo delivered with non-blocking recommendation (`docs/research/camera-connectivity-feasibility-v1.md`). |
-| NI-035 | W11 | Frontend/Rendering | 2026-05-04 | 2026-05-15 |  | in_progress | Preview-first/full-source progressive settle is now active in `ImageViewer` with capped settle dimensions for responsiveness; remaining work is full-res UX telemetry and additional performance assertions for larger source sets. |
+| NI-035 | W11 | Frontend/Rendering | 2026-05-04 | 2026-05-15 |  | in_progress | Preview-first/full-source progressive settle is now active in `ImageViewer` with capped settle dimensions for responsiveness; explicit viewport telemetry attributes and e2e assertions are now in place, and remaining work is larger-source performance tuning + UX refinement. |
 
 ### Critical Path Notes
 

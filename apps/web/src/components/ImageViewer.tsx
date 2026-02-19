@@ -272,6 +272,8 @@ export function ImageViewer({
   const [isViewerFocused, setIsViewerFocused] = useState(false);
   const [isBeforeHoldActive, setIsBeforeHoldActive] = useState(false);
   const [isSourceImageLoading, setIsSourceImageLoading] = useState(false);
+  const [settleSourceUsed, setSettleSourceUsed] = useState<"preview" | "full">("preview");
+  const [settleScaleUsed, setSettleScaleUsed] = useState(1);
 
   const activeImage = useMemo(
     () => images.find((image) => image.id === selectedImageId) ?? images[0],
@@ -304,6 +306,8 @@ export function ImageViewer({
     setCachedFrameSrc(null);
     setFullResImage(null);
     setIsSourceImageLoading(true);
+    setSettleSourceUsed("preview");
+    setSettleScaleUsed(1);
     let cancelled = false;
     const previewImage = new Image();
     previewImage.decoding = "async";
@@ -408,6 +412,8 @@ export function ImageViewer({
       setCachedFrameSrc(cachedSettleFrame.src);
       setRendererError(null);
       setRenderQuality("settle");
+      setSettleSourceUsed(settleSourceKey);
+      setSettleScaleUsed(settleResolutionScale);
       return;
     }
 
@@ -432,9 +438,13 @@ export function ImageViewer({
           lutStage,
         });
 
-        if (quality === "settle" && canvasRef.current) {
-          const cachedSrc = canvasRef.current.toDataURL("image/png");
-          renderCacheRef.current.set(settleCacheKey, cachedSrc);
+        if (quality === "settle") {
+          setSettleSourceUsed(settleSourceKey);
+          setSettleScaleUsed(resolutionScale);
+          if (canvasRef.current) {
+            const cachedSrc = canvasRef.current.toDataURL("image/png");
+            renderCacheRef.current.set(settleCacheKey, cachedSrc);
+          }
         }
 
         setRendererError(null);
@@ -600,18 +610,14 @@ export function ImageViewer({
   const rendererModeLabel = rendererMode === "cpu_fallback" ? "CPU fallback" : "WebGL2";
   const lutStageLabel = lutStage ? "LUT on" : "LUT off";
   const splitPercent = `${(splitPosition * 100).toFixed(2)}%`;
-  const settleSourceLabel = hasDistinctFullSource
-    ? fullResImage
-      ? "full"
-      : "preview"
-    : "preview";
+  const settleSourceLabel = settleSourceUsed;
   const renderStatusText = rendererError
     ? `Render status: ${rendererError}. Showing fallback preview.`
     : showCachedAfterLayer
-      ? `${rendererModeLabel}: restored settled frame from cache.`
+      ? `${rendererModeLabel}: restored settled frame from cache (source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}).`
     : renderQuality === "interactive"
       ? `${rendererModeLabel}: interactive preview (${Math.round(INTERACTIVE_RESOLUTION_SCALE * 100)}%) (${lutStageLabel}).`
-      : `${rendererModeLabel}: settled full resolution (${lutStageLabel}; source=${settleSourceLabel}).`;
+      : `${rendererModeLabel}: settled full resolution (${lutStageLabel}; source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}).`;
   const renderStatusWithWarning = rendererWarning
     ? `${renderStatusText} ${rendererWarning}`
     : renderStatusText;
@@ -672,6 +678,11 @@ export function ImageViewer({
       <div
         style={viewportStyle}
         data-testid="viewer-viewport"
+        data-render-quality={renderQuality}
+        data-settle-source={settleSourceLabel}
+        data-settle-scale={settleScaleUsed.toFixed(4)}
+        data-has-full-source={hasDistinctFullSource ? "true" : "false"}
+        data-full-source-ready={fullResImage ? "true" : "false"}
         tabIndex={0}
         aria-label="Recipe viewer viewport"
         onPointerDown={handlePointerDownPan}

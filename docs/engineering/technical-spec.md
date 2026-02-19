@@ -225,6 +225,13 @@ Encoding:
   - divider drag updates normalized split position
 - loading:
   - viewer shows an in-viewport loading indicator while the selected source image is decoding
+- high-res telemetry:
+  - viewer viewport exposes render telemetry attributes for QA/e2e:
+    - `data-render-quality`
+    - `data-settle-source`
+    - `data-settle-scale`
+    - `data-has-full-source`
+    - `data-full-source-ready`
 
 Image tab strip:
 - exactly 3 canonical image thumbnails
