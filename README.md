@@ -81,6 +81,14 @@ npm run calibration:run
 npm run calibration:dry-run
 npm run calibration:oracle:index:check
 npm run calibration:oracle:index:check:camera-engine
+npm run calibration:camera:oracle:import
+npm run calibration:camera:oracle:import:dry-run
+npm run calibration:camera:oracle:check
+npm run calibration:camera:run
+npm run calibration:camera:baseline:check
+npm run calibration:camera:baseline:lock
+npm run calibration:camera:baseline:refresh
+npm run calibration:camera:gate
 npm run calibration:baseline:lock
 npm run calibration:baseline:refresh
 npm run calibration:baseline:check
@@ -99,6 +107,13 @@ npm run test:acceptance
 - WebGL2 is primary rendering path with CPU fallback when WebGL2 is unavailable.
 - Calibration harness writes oracle index metadata (`artifacts/calibration/oracle-v1/index.v1.json`) for scene/case traceability.
 - Oracle source policy can be enforced in calibration runs (`--require-oracle-source camera_engine`) to block non-camera-engine oracle entries.
+- Camera-engine oracle workflow:
+  - import camera exports into strict oracle index via `npm run calibration:camera:oracle:import`
+  - validate strict policy via `npm run calibration:camera:oracle:check`
+  - run evaluate path against camera oracle via `npm run calibration:camera:run`
+  - enforce release gate (oracle + baseline required) via `npm run calibration:camera:gate`
+- CI strictness:
+  - set repository variable `CAMERA_CALIBRATION_REQUIRED=true` to require camera gate on every CI run
 
 See:
 - `docs/engineering/technical-spec.md`

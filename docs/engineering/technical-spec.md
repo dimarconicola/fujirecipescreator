@@ -400,6 +400,14 @@ Root scripts:
 - `npm run calibration:dry-run`
 - `npm run calibration:oracle:index:check`
 - `npm run calibration:oracle:index:check:camera-engine`
+- `npm run calibration:camera:oracle:import`
+- `npm run calibration:camera:oracle:import:dry-run`
+- `npm run calibration:camera:oracle:check`
+- `npm run calibration:camera:run`
+- `npm run calibration:camera:baseline:check`
+- `npm run calibration:camera:baseline:lock`
+- `npm run calibration:camera:baseline:refresh`
+- `npm run calibration:camera:gate`
 - `npm run calibration:baseline:lock`
 - `npm run calibration:baseline:refresh`
 - `npm run calibration:baseline:check`
@@ -418,12 +426,14 @@ Unit coverage highlights:
 - calibration harness (NI-030 bootstrap) computes DeltaE00 frame metrics and supports optional baseline regression comparison via `--baseline-metrics`
 - calibration harness record/evaluate flow now writes and validates oracle index contracts (`index.v1.json`) with scene/case hash integrity checks
 - calibration harness/source validator supports explicit oracle source policy gating (`--require-oracle-source camera_engine`) for camera-engine-only enforcement
+- camera-engine oracle import pipeline can build strict camera-source index contracts (`scripts/import-camera-oracle.mjs`) from exported scene/case JPEGs
 
 ## 13. Explicit Known Gaps
 
 1. Full-source settle is currently capped by a max settle dimension (`2400`) and does not yet run true uncapped full-resolution rendering for very large sources.
 2. Bundled LUT coverage is intentionally limited to manifest-approved, distributable assets; blocked entries are legal-only metadata and never loaded at runtime.
 3. CPU and WebGL paths are intentionally approximate and not bit-identical.
+4. Strict camera-oracle CI checks are conditional on presence of camera oracle/baseline artifacts (`artifacts/calibration/oracle-camera-engine-v1`, `calibration/baseline/metrics.camera_engine.v1.json`) unless repository variable `CAMERA_CALIBRATION_REQUIRED=true` is enabled.
 
 ## 14. Research-Aligned V2 Direction (Proposed)
 

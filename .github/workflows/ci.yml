@@ -18,6 +18,8 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      CAMERA_CALIBRATION_REQUIRED: ${{ vars.CAMERA_CALIBRATION_REQUIRED || 'false' }}
 
     steps:
       - name: Checkout
@@ -47,6 +49,14 @@ jobs:
       - name: Calibration Baseline Check
         if: ${{ hashFiles('calibration/baseline/metrics.v1.json') != '' }}
         run: npm run calibration:baseline:check
+
+      - name: Calibration Camera Gate (Required)
+        if: ${{ env.CAMERA_CALIBRATION_REQUIRED == 'true' }}
+        run: npm run calibration:camera:gate
+
+      - name: Calibration Camera Gate (Conditional)
+        if: ${{ env.CAMERA_CALIBRATION_REQUIRED != 'true' && hashFiles('artifacts/calibration/oracle-camera-engine-v1/index.v1.json') != '' && hashFiles('calibration/baseline/metrics.camera_engine.v1.json') != '' }}
+        run: npm run calibration:camera:gate
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
