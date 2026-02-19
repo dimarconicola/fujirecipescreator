@@ -64,6 +64,25 @@ test("layout does not introduce horizontal overflow", async ({ page }) => {
   expect(narrowOverflow).toBeLessThanOrEqual(1);
 });
 
+test("parameter info buttons remain readable and toggle help text", async ({ page }) => {
+  await page.goto("/");
+
+  const toneSection = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Tone" }),
+  });
+  const dynamicRangeInfoButton = toneSection.getByLabel("Toggle parameter help").first();
+  await expect(dynamicRangeInfoButton).toBeVisible();
+
+  const infoButtonBox = await dynamicRangeInfoButton.boundingBox();
+  expect(infoButtonBox?.width ?? 0).toBeGreaterThanOrEqual(16);
+  expect(infoButtonBox?.height ?? 0).toBeGreaterThanOrEqual(16);
+
+  const expectedHelpText = await dynamicRangeInfoButton.getAttribute("title");
+  expect(expectedHelpText).toBeTruthy();
+  await dynamicRangeInfoButton.click();
+  await expect(toneSection.getByText(expectedHelpText ?? "", { exact: true })).toBeVisible();
+});
+
 test("share link restoration covers same-profile and legacy migration paths", async ({
   page,
 }) => {
@@ -235,6 +254,37 @@ test("visual baseline for split divider and hover controls", async ({ page }) =>
     caret: "hide",
     maxDiffPixelRatio: 0.03,
   });
+});
+
+test("viewer progressive settle upgrades to full source and exposes telemetry", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const viewport = page.getByTestId("viewer-viewport");
+  await expect(viewport).toHaveAttribute("data-has-full-source", "true");
+
+  await expect
+    .poll(async () => await viewport.getAttribute("data-full-source-ready"), {
+      timeout: 10000,
+    })
+    .toBe("true");
+
+  await expect
+    .poll(async () => await viewport.getAttribute("data-render-quality"), {
+      timeout: 10000,
+    })
+    .toBe("settle");
+
+  await expect
+    .poll(async () => await viewport.getAttribute("data-settle-source"), {
+      timeout: 10000,
+    })
+    .toBe("full");
+
+  const settleScale = Number((await viewport.getAttribute("data-settle-scale")) ?? "0");
+  expect(settleScale).toBeGreaterThan(0);
+  expect(settleScale).toBeLessThan(1);
 });
 
 test("preset gallery preview rendering stays responsive while chunking", async ({

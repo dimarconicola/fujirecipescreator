@@ -10,6 +10,7 @@ import {
 import {
   ApproxCpuRenderer,
   ApproxWebglRenderer,
+  type LutStageConfig,
 } from "@fuji/engine-webgl";
 import type { Profile, RecipeParams } from "@fuji/domain";
 import type { CanonicalImage } from "../data/images";
@@ -33,6 +34,8 @@ type ImageViewerProps = {
   onSetSplitPosition: (position: number) => void;
   onRenderStatusChange?: (status: string) => void;
   onRendererModeChange?: (mode: RendererMode) => void;
+  lutStage?: LutStageConfig;
+  lutCacheKey?: string;
 };
 
 type DragState = {
@@ -50,14 +53,14 @@ type RendererAdapter = {
   render: (
     image: HTMLImageElement,
     params: ReturnType<typeof toApproxRenderParams>,
-    options?: { resolutionScale?: number },
+    options?: { resolutionScale?: number; lutStage?: LutStageConfig },
   ) => void;
 };
 
 const rootStyle: CSSProperties = {
   display: "grid",
-  gap: "4px",
-  alignContent: "start",
+  gap: "8px",
+  gridTemplateRows: "var(--workspace-thumb-strip-height, 44px) minmax(0, 1fr)",
   alignSelf: "start",
   border: "1px solid var(--ui-border-soft)",
   borderRadius: "var(--ui-radius-lg)",
@@ -65,17 +68,24 @@ const rootStyle: CSSProperties = {
   background:
     "linear-gradient(180deg, rgba(20, 30, 43, 0.98), rgba(14, 21, 31, 0.98))",
   boxShadow: "0 20px 42px rgba(0, 0, 0, 0.38)",
+  height: "var(--workspace-panel-height, 680px)",
+  maxHeight: "var(--workspace-panel-height, 680px)",
 };
 
 const tabsStyle: CSSProperties = {
   display: "flex",
-  flexWrap: "wrap",
+  flexWrap: "nowrap",
+  alignItems: "stretch",
   gap: "4px",
+  height: "var(--workspace-thumb-strip-height, 44px)",
+  overflowX: "auto",
+  overflowY: "hidden",
 };
 
 const viewportStyle: CSSProperties = {
   position: "relative",
-  height: "540px",
+  height: "100%",
+  minHeight: 0,
   border: "1px solid var(--ui-border-soft)",
   borderRadius: "12px",
   overflow: "hidden",
@@ -102,7 +112,7 @@ const tabButtonStyle: CSSProperties = {
   padding: "3px",
   display: "grid",
   width: "64px",
-  height: "44px",
+  height: "100%",
   textAlign: "left",
   overflow: "hidden",
 };
@@ -188,13 +198,43 @@ const zoomLabelStyle: CSSProperties = {
   letterSpacing: "0.02em",
 };
 
+const loaderOverlayStyle: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  zIndex: 7,
+  display: "grid",
+  placeItems: "center",
+  pointerEvents: "none",
+  background:
+    "linear-gradient(180deg, rgba(8, 13, 19, 0.14), rgba(8, 13, 19, 0.34))",
+};
+
+const loaderPillStyle: CSSProperties = {
+  borderRadius: "999px",
+  border: "1px solid rgba(129, 205, 236, 0.52)",
+  backgroundColor: "rgba(10, 18, 26, 0.84)",
+  color: "var(--ui-text-0)",
+  padding: "6px 12px",
+  fontSize: "0.78rem",
+  letterSpacing: "0.02em",
+};
+
 const INTERACTIVE_RESOLUTION_SCALE = 0.6;
 const SETTLE_RENDER_DELAY_MS = 260;
+const MAX_SETTLE_RENDER_DIMENSION = 2400;
 
 type RenderQuality = "interactive" | "settle";
 
 function isFromViewerControls(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest('[data-viewer-controls="true"]') !== null;
+}
+
+function computeSettleResolutionScale(image: HTMLImageElement): number {
+  const maxDimension = Math.max(image.width, image.height);
+  if (!Number.isFinite(maxDimension) || maxDimension <= 0) {
+    return 1;
+  }
+  return Math.min(1, MAX_SETTLE_RENDER_DIMENSION / maxDimension);
 }
 
 export function ImageViewer({
@@ -213,12 +253,15 @@ export function ImageViewer({
   onSetSplitPosition,
   onRenderStatusChange,
   onRendererModeChange,
+  lutStage,
+  lutCacheKey,
 }: ImageViewerProps) {
   const dragRef = useRef<DragState | null>(null);
   const rendererRef = useRef<RendererAdapter | null>(null);
   const renderCacheRef = useRef(new RenderFrameCache(32));
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
+  const [fullResImage, setFullResImage] = useState<HTMLImageElement | null>(null);
   const [rendererError, setRendererError] = useState<string | null>(null);
   const [rendererWarning, setRendererWarning] = useState<string | null>(null);
   const [rendererMode, setRendererMode] = useState<RendererMode>("webgl2");
@@ -228,13 +271,19 @@ export function ImageViewer({
   const [isMouseHoveringViewer, setIsMouseHoveringViewer] = useState(false);
   const [isViewerFocused, setIsViewerFocused] = useState(false);
   const [isBeforeHoldActive, setIsBeforeHoldActive] = useState(false);
+  const [isSourceImageLoading, setIsSourceImageLoading] = useState(false);
+  const [settleSourceUsed, setSettleSourceUsed] = useState<"preview" | "full">("preview");
+  const [settleScaleUsed, setSettleScaleUsed] = useState(1);
 
   const activeImage = useMemo(
     () => images.find((image) => image.id === selectedImageId) ?? images[0],
     [images, selectedImageId],
   );
   const activeImageId = activeImage?.id ?? selectedImageId;
-  const activeImageSource = activeImage?.previewSrc ?? "";
+  const previewImageSource = activeImage?.previewSrc ?? "";
+  const fullImageSource = activeImage?.fullSrc ?? previewImageSource;
+  const hasDistinctFullSource =
+    Boolean(fullImageSource) && fullImageSource !== previewImageSource;
 
   const transformedLayerStyle: CSSProperties = {
     ...layerStyleBase,
@@ -242,40 +291,67 @@ export function ImageViewer({
     transformOrigin: "center center",
     width: "100%",
     height: "100%",
-    objectFit: "contain",
+    objectFit: "cover",
   };
 
   useEffect(() => {
-    if (!activeImageSource) {
+    if (!previewImageSource) {
       setSourceImage(null);
+      setFullResImage(null);
       setCachedFrameSrc(null);
+      setIsSourceImageLoading(false);
       return;
     }
 
     setCachedFrameSrc(null);
+    setFullResImage(null);
+    setIsSourceImageLoading(true);
+    setSettleSourceUsed("preview");
+    setSettleScaleUsed(1);
     let cancelled = false;
-    const image = new Image();
-    image.decoding = "async";
-    image.src = activeImageSource;
-    image.onload = () => {
+    const previewImage = new Image();
+    previewImage.decoding = "async";
+    previewImage.src = previewImageSource;
+    previewImage.onload = () => {
       if (cancelled) {
         return;
       }
-      setSourceImage(image);
+      setSourceImage(previewImage);
+      setIsSourceImageLoading(false);
       setRendererError(null);
     };
-    image.onerror = () => {
+    previewImage.onerror = () => {
       if (cancelled) {
         return;
       }
       setSourceImage(null);
+      setFullResImage(null);
+      setIsSourceImageLoading(false);
       setRendererError("Unable to load preview image");
     };
+
+    if (hasDistinctFullSource) {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = fullImageSource;
+      image.onload = () => {
+        if (cancelled) {
+          return;
+        }
+        setFullResImage(image);
+      };
+      image.onerror = () => {
+        if (cancelled) {
+          return;
+        }
+        setFullResImage(null);
+      };
+    }
 
     return () => {
       cancelled = true;
     };
-  }, [activeImageSource]);
+  }, [hasDistinctFullSource, fullImageSource, previewImageSource]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -321,17 +397,23 @@ export function ImageViewer({
       return;
     }
 
+    const settleSourceImage = fullResImage ?? sourceImage;
+    const settleSourceKey = fullResImage ? "full" : "preview";
+    const settleResolutionScale = computeSettleResolutionScale(settleSourceImage);
     const settleCacheKey = buildRenderCacheKey({
       imageId: activeImageId,
       profileId,
       params,
       mode: "settle",
+      renderVariant: `${lutCacheKey ?? "lut:off"};source=${settleSourceKey}`,
     });
     const cachedSettleFrame = renderCacheRef.current.get(settleCacheKey);
     if (cachedSettleFrame) {
       setCachedFrameSrc(cachedSettleFrame.src);
       setRendererError(null);
       setRenderQuality("settle");
+      setSettleSourceUsed(settleSourceKey);
+      setSettleScaleUsed(settleResolutionScale);
       return;
     }
 
@@ -341,17 +423,28 @@ export function ImageViewer({
     const renderParams = toApproxRenderParams(params, profileStrengthScalars);
     let cancelled = false;
 
-    const renderAtScale = (resolutionScale: number, quality: RenderQuality) => {
+    const renderAtScale = (
+      image: HTMLImageElement,
+      resolutionScale: number,
+      quality: RenderQuality,
+    ) => {
       if (cancelled) {
         return;
       }
 
       try {
-        renderer.render(sourceImage, renderParams, { resolutionScale });
+        renderer.render(image, renderParams, {
+          resolutionScale,
+          lutStage,
+        });
 
-        if (quality === "settle" && canvasRef.current) {
-          const cachedSrc = canvasRef.current.toDataURL("image/png");
-          renderCacheRef.current.set(settleCacheKey, cachedSrc);
+        if (quality === "settle") {
+          setSettleSourceUsed(settleSourceKey);
+          setSettleScaleUsed(resolutionScale);
+          if (canvasRef.current) {
+            const cachedSrc = canvasRef.current.toDataURL("image/png");
+            renderCacheRef.current.set(settleCacheKey, cachedSrc);
+          }
         }
 
         setRendererError(null);
@@ -362,16 +455,26 @@ export function ImageViewer({
       }
     };
 
-    renderAtScale(INTERACTIVE_RESOLUTION_SCALE, "interactive");
+    renderAtScale(sourceImage, INTERACTIVE_RESOLUTION_SCALE, "interactive");
     const settleTimer = window.setTimeout(() => {
-      renderAtScale(1, "settle");
+      renderAtScale(settleSourceImage, settleResolutionScale, "settle");
     }, SETTLE_RENDER_DELAY_MS);
 
     return () => {
       cancelled = true;
       window.clearTimeout(settleTimer);
     };
-  }, [activeImageId, params, profileId, profileStrengthScalars, rendererReady, sourceImage]);
+  }, [
+    activeImageId,
+    lutCacheKey,
+    lutStage,
+    params,
+    profileId,
+    profileStrengthScalars,
+    fullResImage,
+    rendererReady,
+    sourceImage,
+  ]);
 
   const handlePointerDownPan = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || isFromViewerControls(event.target)) {
@@ -503,18 +606,22 @@ export function ImageViewer({
   const showCachedAfterLayer = afterLayerVisible && !rendererError && !!cachedFrameSrc;
   const showRenderedAfterLayer = afterLayerVisible && !rendererError && !cachedFrameSrc;
   const showFallbackAfterLayer = afterLayerVisible && !!rendererError;
+  const showViewerLoader = isSourceImageLoading || (!sourceImage && !rendererError);
   const rendererModeLabel = rendererMode === "cpu_fallback" ? "CPU fallback" : "WebGL2";
+  const lutStageLabel = lutStage ? "LUT on" : "LUT off";
   const splitPercent = `${(splitPosition * 100).toFixed(2)}%`;
+  const settleSourceLabel = settleSourceUsed;
   const renderStatusText = rendererError
     ? `Render status: ${rendererError}. Showing fallback preview.`
     : showCachedAfterLayer
-      ? `${rendererModeLabel}: restored settled frame from cache.`
+      ? `${rendererModeLabel}: restored settled frame from cache (source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}).`
     : renderQuality === "interactive"
-      ? `${rendererModeLabel}: interactive preview (${Math.round(INTERACTIVE_RESOLUTION_SCALE * 100)}%).`
-      : `${rendererModeLabel}: settled full resolution.`;
+      ? `${rendererModeLabel}: interactive preview (${Math.round(INTERACTIVE_RESOLUTION_SCALE * 100)}%) (${lutStageLabel}).`
+      : `${rendererModeLabel}: settled full resolution (${lutStageLabel}; source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}).`;
   const renderStatusWithWarning = rendererWarning
     ? `${renderStatusText} ${rendererWarning}`
     : renderStatusText;
+  const beforeLayerSrc = fullResImage ? activeImage.fullSrc : activeImage.previewSrc;
 
   const beforeLayerStyle: CSSProperties = {
     ...transformedLayerStyle,
@@ -571,6 +678,11 @@ export function ImageViewer({
       <div
         style={viewportStyle}
         data-testid="viewer-viewport"
+        data-render-quality={renderQuality}
+        data-settle-source={settleSourceLabel}
+        data-settle-scale={settleScaleUsed.toFixed(4)}
+        data-has-full-source={hasDistinctFullSource ? "true" : "false"}
+        data-full-source-ready={fullResImage ? "true" : "false"}
         tabIndex={0}
         aria-label="Recipe viewer viewport"
         onPointerDown={handlePointerDownPan}
@@ -588,7 +700,7 @@ export function ImageViewer({
       >
         {beforeLayerVisible ? (
           <img
-            src={activeImage.previewSrc}
+            src={beforeLayerSrc}
             alt={activeImage.title}
             style={beforeLayerStyle}
             data-testid="viewer-before-layer"
@@ -614,7 +726,7 @@ export function ImageViewer({
             ) : null}
             {showFallbackAfterLayer ? (
               <img
-                src={activeImage.previewSrc}
+                src={beforeLayerSrc}
                 alt={`${activeImage.title} fallback`}
                 style={afterLayerStyle}
               />
@@ -640,7 +752,7 @@ export function ImageViewer({
             ) : null}
             {showFallbackAfterLayer ? (
               <img
-                src={activeImage.previewSrc}
+                src={beforeLayerSrc}
                 alt={`${activeImage.title} fallback`}
                 style={afterLayerStyle}
               />
@@ -656,6 +768,11 @@ export function ImageViewer({
             data-testid="viewer-split-divider"
             onPointerDown={handlePointerDownSplit}
           />
+        ) : null}
+        {showViewerLoader ? (
+          <div style={loaderOverlayStyle} data-testid="viewer-loader">
+            <span style={loaderPillStyle}>Loading image...</span>
+          </div>
         ) : null}
         <div
           data-viewer-controls="true"

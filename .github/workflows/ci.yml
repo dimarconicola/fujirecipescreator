@@ -38,6 +38,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Calibration Dry Run
+        run: npm run calibration:dry-run
+
+      - name: Calibration Oracle Index Check
+        run: npm run calibration:oracle:index:check
+
+      - name: Calibration Baseline Check
+        if: ${{ hashFiles('calibration/baseline/metrics.v1.json') != '' }}
+        run: npm run calibration:baseline:check
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
