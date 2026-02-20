@@ -417,6 +417,8 @@ Root scripts:
 - `npm run calibration:camera:gate:validate:strict`
 - `npm run calibration:camera:gate:strict`
 - `npm run calibration:camera:gate`
+- `npm run calibration:tune:report`
+- `npm run calibration:camera:tune:report`
 - `npm run calibration:baseline:lock`
 - `npm run calibration:baseline:refresh`
 - `npm run calibration:baseline:check`
@@ -438,6 +440,7 @@ Unit coverage highlights:
 - camera-engine oracle import pipeline can build strict camera-source index contracts (`scripts/import-camera-oracle.mjs`) from exported scene/case JPEGs
 - camera bootstrap helper can source missing canonical scene files from approved metadata URLs and generate strict camera-oracle bootstrap assets end-to-end (`scripts/bootstrap-camera-calibration-assets.mjs`)
 - camera gate now validates camera baseline metadata policy/path consistency before running strict camera checks, supports preflight-only mode (`npm run calibration:camera:gate -- --validate-only`), can skip redundant engine builds in CI (`--skip-build`), and can reject bootstrap-tagged source entries (`--disallow-bootstrap-source`)
+- calibration tuning report helper analyzes directional/frame metrics and emits per-axis mapping actions; camera-tuning mode fails low-signal bootstrap-style runs to avoid false-confidence tuning (`scripts/report-calibration-tuning.mjs`)
 - engine integration tests now cover both camera gate validation contracts and camera-oracle import script success/failure paths
 
 ## 13. Explicit Known Gaps

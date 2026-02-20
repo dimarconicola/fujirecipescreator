@@ -94,6 +94,8 @@ npm run calibration:camera:gate:validate
 npm run calibration:camera:gate:validate:strict
 npm run calibration:camera:gate:strict
 npm run calibration:camera:gate
+npm run calibration:tune:report
+npm run calibration:camera:tune:report
 npm run calibration:baseline:lock
 npm run calibration:baseline:refresh
 npm run calibration:baseline:check
@@ -122,6 +124,8 @@ npm run test:acceptance
   - run strict gate preflight only via `npm run calibration:camera:gate:validate:strict`
   - run gate preflight only (no evaluate execution) via `npm run calibration:camera:gate:validate` (or `npm run calibration:camera:gate -- --validate-only`)
   - skip redundant engine rebuild in pre-built environments via `npm run calibration:camera:gate -- --skip-build`
+  - generate per-axis tuning guidance from latest run via `npm run calibration:tune:report`
+  - run camera-policy tuning report with low-signal protection via `npm run calibration:camera:tune:report`
 - CI strictness:
   - set repository variable `CAMERA_CALIBRATION_REQUIRED=true` to require camera gate on every CI run
   - set repository variable `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true` to reject `*bootstrap*` oracle source tags in CI camera gate

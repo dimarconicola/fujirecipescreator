@@ -30,6 +30,8 @@
     "calibration:camera:gate:validate:strict": "node scripts/run-camera-calibration-gate.mjs --validate-only --disallow-bootstrap-source",
     "calibration:camera:gate:strict": "node scripts/run-camera-calibration-gate.mjs --disallow-bootstrap-source",
     "calibration:camera:gate": "node scripts/run-camera-calibration-gate.mjs",
+    "calibration:tune:report": "node scripts/report-calibration-tuning.mjs",
+    "calibration:camera:tune:report": "node scripts/report-calibration-tuning.mjs --require-oracle-source camera_engine --fail-on-low-signal",
     "calibration:baseline:lock": "node scripts/lock-calibration-baseline.mjs",
     "calibration:baseline:refresh": "npm run calibration:dry-run && npm run calibration:baseline:lock",
     "calibration:baseline:check": "npm --workspace @fuji/engine-webgl run build && node scripts/run-calibration-harness.mjs --mode evaluate --baseline-metrics calibration/baseline/metrics.v1.json",
