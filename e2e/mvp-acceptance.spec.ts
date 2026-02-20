@@ -280,11 +280,22 @@ test("viewer progressive settle upgrades to full source and exposes telemetry", 
     .poll(async () => await viewport.getAttribute("data-settle-source"), {
       timeout: 10000,
     })
-    .toBe("full");
+    .toMatch(/^full(?:_resampled)?$/);
+  await expect(viewport).toHaveAttribute("data-full-source-status", "ready");
+  await expect(viewport).toHaveAttribute("data-full-source-preparing", "false");
 
+  const settleSource = (await viewport.getAttribute("data-settle-source")) ?? "preview";
   const settleScale = Number((await viewport.getAttribute("data-settle-scale")) ?? "0");
+  const settleMaxDimension = Number(
+    (await viewport.getAttribute("data-settle-max-dimension")) ?? "0",
+  );
   expect(settleScale).toBeGreaterThan(0);
-  expect(settleScale).toBeLessThan(1);
+  expect(settleScale).toBeLessThanOrEqual(1);
+  expect(settleMaxDimension).toBeGreaterThanOrEqual(2400);
+  expect(settleMaxDimension).toBeLessThanOrEqual(3200);
+  if (settleSource === "full_resampled") {
+    expect(settleScale).toBeLessThan(1);
+  }
 });
 
 test("preset gallery preview rendering stays responsive while chunking", async ({

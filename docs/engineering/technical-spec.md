@@ -231,6 +231,7 @@ Encoding:
     - `data-render-quality`
     - `data-settle-source` (`preview`, `full`, or `full_resampled`)
     - `data-settle-scale`
+    - `data-settle-max-dimension` (adaptive cap: `2400` low-resource, otherwise `3200`)
     - `data-has-full-source`
     - `data-full-source-ready`
     - `data-full-source-preparing`
@@ -253,7 +254,7 @@ Fallback path:
 
 Quality strategy:
 - interactive render: scale `0.6`
-- settle render: runs after `260ms` debounce with capped max source dimension (`2400`) to preserve responsiveness while increasing resolved detail over preview-only rendering
+- settle render: runs after `260ms` debounce with adaptive capped max source dimension (`3200` default, `2400` on low-memory/low-core devices) to preserve responsiveness while increasing resolved detail over preview-only rendering
 - full-source settle preparation prefers `createImageBitmap(..., { resizeWidth, resizeHeight })` and falls back to canvas downsampling when unavailable
 - settled frames may be restored from cache when key matches
 
@@ -445,7 +446,7 @@ Unit coverage highlights:
 
 ## 13. Explicit Known Gaps
 
-1. Full-source settle is currently capped by a max settle dimension (`2400`) and does not yet run true uncapped full-resolution rendering for very large sources.
+1. Full-source settle remains capped by an adaptive max settle dimension (`3200` default, `2400` low-resource devices) and does not yet run true uncapped full-resolution rendering for very large sources.
 2. Bundled LUT coverage is intentionally limited to manifest-approved, distributable assets; blocked entries are legal-only metadata and never loaded at runtime.
 3. CPU and WebGL paths are intentionally approximate and not bit-identical.
 4. Strict camera-oracle CI checks are conditional on presence of camera oracle/baseline artifacts (`artifacts/calibration/oracle-camera-engine-v1`, `calibration/baseline/metrics.camera_engine.v1.json`) unless repository variable `CAMERA_CALIBRATION_REQUIRED=true` is enabled; bootstrap-tag rejection can be enabled separately via `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`.

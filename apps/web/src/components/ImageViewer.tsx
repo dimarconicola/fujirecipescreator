@@ -47,11 +47,14 @@ type DragState = {
   startOffsetY: number;
 };
 
+type SettleSource = HTMLImageElement | HTMLCanvasElement | ImageBitmap;
+type SettleSourceLabel = "preview" | "full" | "full_resampled";
+
 type RendererMode = "webgl2" | "cpu_fallback";
 type RendererAdapter = {
   mode: RendererMode;
   render: (
-    image: HTMLImageElement,
+    image: SettleSource,
     params: ReturnType<typeof toApproxRenderParams>,
     options?: { resolutionScale?: number; lutStage?: LutStageConfig },
   ) => void;
@@ -219,9 +222,46 @@ const loaderPillStyle: CSSProperties = {
   letterSpacing: "0.02em",
 };
 
+const settleProgressBadgeStyle: CSSProperties = {
+  position: "absolute",
+  left: "10px",
+  bottom: "10px",
+  zIndex: 6,
+  borderRadius: "999px",
+  border: "1px solid rgba(79, 209, 255, 0.45)",
+  backgroundColor: "rgba(8, 13, 19, 0.88)",
+  color: "var(--ui-text-0)",
+  padding: "4px 10px",
+  fontSize: "0.72rem",
+  letterSpacing: "0.02em",
+  pointerEvents: "none",
+};
+
 const INTERACTIVE_RESOLUTION_SCALE = 0.6;
 const SETTLE_RENDER_DELAY_MS = 260;
-const MAX_SETTLE_RENDER_DIMENSION = 2400;
+const DEFAULT_MAX_SETTLE_RENDER_DIMENSION = 3200;
+const LOW_RESOURCE_MAX_SETTLE_RENDER_DIMENSION = 2400;
+
+type NavigatorWithDeviceMemory = Navigator & {
+  deviceMemory?: number;
+};
+
+function resolveMaxSettleRenderDimension(): number {
+  if (typeof navigator === "undefined") {
+    return DEFAULT_MAX_SETTLE_RENDER_DIMENSION;
+  }
+  const nav = navigator as NavigatorWithDeviceMemory;
+  const deviceMemory = nav.deviceMemory;
+  const cpuCores = navigator.hardwareConcurrency;
+  const hasLowMemory = typeof deviceMemory === "number" && deviceMemory > 0 && deviceMemory <= 4;
+  const hasLowCpu = typeof cpuCores === "number" && cpuCores > 0 && cpuCores <= 4;
+  if (hasLowMemory || hasLowCpu) {
+    return LOW_RESOURCE_MAX_SETTLE_RENDER_DIMENSION;
+  }
+  return DEFAULT_MAX_SETTLE_RENDER_DIMENSION;
+}
+
+const MAX_SETTLE_RENDER_DIMENSION = resolveMaxSettleRenderDimension();
 
 type RenderQuality = "interactive" | "settle";
 
@@ -229,12 +269,85 @@ function isFromViewerControls(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest('[data-viewer-controls="true"]') !== null;
 }
 
-function computeSettleResolutionScale(image: HTMLImageElement): number {
-  const maxDimension = Math.max(image.width, image.height);
+function computeSettleResolutionScale(width: number, height: number): number {
+  const maxDimension = Math.max(width, height);
   if (!Number.isFinite(maxDimension) || maxDimension <= 0) {
     return 1;
   }
   return Math.min(1, MAX_SETTLE_RENDER_DIMENSION / maxDimension);
+}
+
+function resolveSettleSourceDimensions(source: SettleSource): { width: number; height: number } {
+  if (source instanceof HTMLImageElement) {
+    return {
+      width: source.naturalWidth || source.width,
+      height: source.naturalHeight || source.height,
+    };
+  }
+  return {
+    width: source.width,
+    height: source.height,
+  };
+}
+
+function disposeSettleSource(source: SettleSource | null): void {
+  if (typeof ImageBitmap !== "undefined" && source instanceof ImageBitmap) {
+    source.close();
+  }
+}
+
+async function prepareFullResolutionSettleSource(
+  image: HTMLImageElement,
+): Promise<{
+  source: SettleSource;
+  sourceLabel: Exclude<SettleSourceLabel, "preview">;
+  scale: number;
+}> {
+  const dimensions = resolveSettleSourceDimensions(image);
+  const scale = computeSettleResolutionScale(dimensions.width, dimensions.height);
+  if (scale >= 1) {
+    return {
+      source: image,
+      sourceLabel: "full",
+      scale: 1,
+    };
+  }
+
+  const targetWidth = Math.max(1, Math.round(dimensions.width * scale));
+  const targetHeight = Math.max(1, Math.round(dimensions.height * scale));
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(image, {
+        resizeWidth: targetWidth,
+        resizeHeight: targetHeight,
+        resizeQuality: "high",
+      });
+      return {
+        source: bitmap,
+        sourceLabel: "full_resampled",
+        scale,
+      };
+    } catch {
+      // Safari and older engines may reject resize options; fallback to canvas path.
+    }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return {
+      source: image,
+      sourceLabel: "full",
+      scale: 1,
+    };
+  }
+  context.drawImage(image, 0, 0, targetWidth, targetHeight);
+  return {
+    source: canvas,
+    sourceLabel: "full_resampled",
+    scale,
+  };
 }
 
 export function ImageViewer({
@@ -262,17 +375,23 @@ export function ImageViewer({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
   const [fullResImage, setFullResImage] = useState<HTMLImageElement | null>(null);
+  const [preparedFullResSource, setPreparedFullResSource] = useState<SettleSource | null>(null);
+  const [preparedFullResLabel, setPreparedFullResLabel] = useState<
+    Exclude<SettleSourceLabel, "preview"> | null
+  >(null);
+  const [preparedFullResScale, setPreparedFullResScale] = useState(1);
   const [rendererError, setRendererError] = useState<string | null>(null);
   const [rendererWarning, setRendererWarning] = useState<string | null>(null);
   const [rendererMode, setRendererMode] = useState<RendererMode>("webgl2");
   const [rendererReady, setRendererReady] = useState(0);
+  const [isPreparingFullResSource, setIsPreparingFullResSource] = useState(false);
   const [renderQuality, setRenderQuality] = useState<RenderQuality>("settle");
   const [cachedFrameSrc, setCachedFrameSrc] = useState<string | null>(null);
   const [isMouseHoveringViewer, setIsMouseHoveringViewer] = useState(false);
   const [isViewerFocused, setIsViewerFocused] = useState(false);
   const [isBeforeHoldActive, setIsBeforeHoldActive] = useState(false);
   const [isSourceImageLoading, setIsSourceImageLoading] = useState(false);
-  const [settleSourceUsed, setSettleSourceUsed] = useState<"preview" | "full">("preview");
+  const [settleSourceUsed, setSettleSourceUsed] = useState<SettleSourceLabel>("preview");
   const [settleScaleUsed, setSettleScaleUsed] = useState(1);
 
   const activeImage = useMemo(
@@ -299,12 +418,17 @@ export function ImageViewer({
       setSourceImage(null);
       setFullResImage(null);
       setCachedFrameSrc(null);
+      setIsPreparingFullResSource(false);
       setIsSourceImageLoading(false);
       return;
     }
 
     setCachedFrameSrc(null);
     setFullResImage(null);
+    setPreparedFullResSource(null);
+    setPreparedFullResLabel(null);
+    setPreparedFullResScale(1);
+    setIsPreparingFullResSource(false);
     setIsSourceImageLoading(true);
     setSettleSourceUsed("preview");
     setSettleScaleUsed(1);
@@ -354,6 +478,49 @@ export function ImageViewer({
   }, [hasDistinctFullSource, fullImageSource, previewImageSource]);
 
   useEffect(() => {
+    if (!fullResImage) {
+      setPreparedFullResSource(null);
+      setPreparedFullResLabel(null);
+      setPreparedFullResScale(1);
+      setIsPreparingFullResSource(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsPreparingFullResSource(true);
+    void (async () => {
+      try {
+        const prepared = await prepareFullResolutionSettleSource(fullResImage);
+        if (cancelled) {
+          disposeSettleSource(prepared.source);
+          return;
+        }
+        setPreparedFullResSource(prepared.source);
+        setPreparedFullResLabel(prepared.sourceLabel);
+        setPreparedFullResScale(prepared.scale);
+        setIsPreparingFullResSource(false);
+      } catch {
+        if (!cancelled) {
+          setPreparedFullResSource(fullResImage);
+          setPreparedFullResLabel("full");
+          setPreparedFullResScale(1);
+          setIsPreparingFullResSource(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fullResImage]);
+
+  useEffect(() => {
+    return () => {
+      disposeSettleSource(preparedFullResSource);
+    };
+  }, [preparedFullResSource]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
@@ -397,9 +564,14 @@ export function ImageViewer({
       return;
     }
 
-    const settleSourceImage = fullResImage ?? sourceImage;
-    const settleSourceKey = fullResImage ? "full" : "preview";
-    const settleResolutionScale = computeSettleResolutionScale(settleSourceImage);
+    const settleSourceImage = preparedFullResSource ?? sourceImage;
+    const settleSourceKey = preparedFullResLabel ?? "preview";
+    const settleResolutionScale = preparedFullResSource
+      ? 1
+      : computeSettleResolutionScale(sourceImage.naturalWidth || sourceImage.width, sourceImage.naturalHeight || sourceImage.height);
+    const settleReportedScale = preparedFullResSource
+      ? preparedFullResScale
+      : settleResolutionScale;
     const settleCacheKey = buildRenderCacheKey({
       imageId: activeImageId,
       profileId,
@@ -413,7 +585,7 @@ export function ImageViewer({
       setRendererError(null);
       setRenderQuality("settle");
       setSettleSourceUsed(settleSourceKey);
-      setSettleScaleUsed(settleResolutionScale);
+      setSettleScaleUsed(settleReportedScale);
       return;
     }
 
@@ -424,9 +596,10 @@ export function ImageViewer({
     let cancelled = false;
 
     const renderAtScale = (
-      image: HTMLImageElement,
+      image: SettleSource,
       resolutionScale: number,
       quality: RenderQuality,
+      reportedScale = resolutionScale,
     ) => {
       if (cancelled) {
         return;
@@ -440,7 +613,7 @@ export function ImageViewer({
 
         if (quality === "settle") {
           setSettleSourceUsed(settleSourceKey);
-          setSettleScaleUsed(resolutionScale);
+          setSettleScaleUsed(reportedScale);
           if (canvasRef.current) {
             const cachedSrc = canvasRef.current.toDataURL("image/png");
             renderCacheRef.current.set(settleCacheKey, cachedSrc);
@@ -457,7 +630,7 @@ export function ImageViewer({
 
     renderAtScale(sourceImage, INTERACTIVE_RESOLUTION_SCALE, "interactive");
     const settleTimer = window.setTimeout(() => {
-      renderAtScale(settleSourceImage, settleResolutionScale, "settle");
+      renderAtScale(settleSourceImage, settleResolutionScale, "settle", settleReportedScale);
     }, SETTLE_RENDER_DELAY_MS);
 
     return () => {
@@ -471,7 +644,9 @@ export function ImageViewer({
     params,
     profileId,
     profileStrengthScalars,
-    fullResImage,
+    preparedFullResLabel,
+    preparedFullResScale,
+    preparedFullResSource,
     rendererReady,
     sourceImage,
   ]);
@@ -611,13 +786,40 @@ export function ImageViewer({
   const lutStageLabel = lutStage ? "LUT on" : "LUT off";
   const splitPercent = `${(splitPosition * 100).toFixed(2)}%`;
   const settleSourceLabel = settleSourceUsed;
+  const isHighResSettleReady =
+    hasDistinctFullSource &&
+    renderQuality === "settle" &&
+    (settleSourceLabel === "full" || settleSourceLabel === "full_resampled");
+  const fullSourceStatus = !hasDistinctFullSource
+    ? "none"
+    : !fullResImage
+      ? "loading"
+      : isPreparingFullResSource
+        ? "preparing"
+        : isHighResSettleReady
+          ? "ready"
+          : "settling";
+  const showSettleProgressBadge = !showViewerLoader && hasDistinctFullSource && !isHighResSettleReady;
+  const settleProgressLabel = !fullResImage
+    ? "Loading full source..."
+    : isPreparingFullResSource
+      ? "Preparing high-res settle..."
+      : renderQuality === "interactive"
+        ? "Refining detail..."
+        : "Applying high-res settle...";
+  const settleQualityLabel =
+    settleSourceLabel === "full"
+      ? "settled full resolution"
+      : settleSourceLabel === "full_resampled"
+        ? "settled high resolution"
+        : "settled preview resolution";
   const renderStatusText = rendererError
     ? `Render status: ${rendererError}. Showing fallback preview.`
     : showCachedAfterLayer
-      ? `${rendererModeLabel}: restored settled frame from cache (source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}).`
+      ? `${rendererModeLabel}: restored settled frame from cache (source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}; full_source=${fullSourceStatus}; max_settle_dim=${MAX_SETTLE_RENDER_DIMENSION}).`
     : renderQuality === "interactive"
-      ? `${rendererModeLabel}: interactive preview (${Math.round(INTERACTIVE_RESOLUTION_SCALE * 100)}%) (${lutStageLabel}).`
-      : `${rendererModeLabel}: settled full resolution (${lutStageLabel}; source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}).`;
+      ? `${rendererModeLabel}: interactive preview (${Math.round(INTERACTIVE_RESOLUTION_SCALE * 100)}%) (${lutStageLabel}; full_source=${fullSourceStatus}).`
+      : `${rendererModeLabel}: ${settleQualityLabel} (${lutStageLabel}; source=${settleSourceLabel}; scale=${settleScaleUsed.toFixed(3)}; full_source=${fullSourceStatus}; max_settle_dim=${MAX_SETTLE_RENDER_DIMENSION}).`;
   const renderStatusWithWarning = rendererWarning
     ? `${renderStatusText} ${rendererWarning}`
     : renderStatusText;
@@ -681,8 +883,11 @@ export function ImageViewer({
         data-render-quality={renderQuality}
         data-settle-source={settleSourceLabel}
         data-settle-scale={settleScaleUsed.toFixed(4)}
+        data-settle-max-dimension={MAX_SETTLE_RENDER_DIMENSION}
         data-has-full-source={hasDistinctFullSource ? "true" : "false"}
         data-full-source-ready={fullResImage ? "true" : "false"}
+        data-full-source-preparing={isPreparingFullResSource ? "true" : "false"}
+        data-full-source-status={fullSourceStatus}
         tabIndex={0}
         aria-label="Recipe viewer viewport"
         onPointerDown={handlePointerDownPan}
@@ -772,6 +977,11 @@ export function ImageViewer({
         {showViewerLoader ? (
           <div style={loaderOverlayStyle} data-testid="viewer-loader">
             <span style={loaderPillStyle}>Loading image...</span>
+          </div>
+        ) : null}
+        {showSettleProgressBadge ? (
+          <div style={settleProgressBadgeStyle} data-testid="viewer-settle-progress">
+            {settleProgressLabel}
           </div>
         ) : null}
         <div
