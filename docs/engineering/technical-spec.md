@@ -225,13 +225,16 @@ Encoding:
   - divider drag updates normalized split position
 - loading:
   - viewer shows an in-viewport loading indicator while the selected source image is decoding
+  - when full-source settle is pending, viewer shows a small in-viewport settle-progress badge until high-res settle is ready
 - high-res telemetry:
   - viewer viewport exposes render telemetry attributes for QA/e2e:
     - `data-render-quality`
-    - `data-settle-source`
+    - `data-settle-source` (`preview`, `full`, or `full_resampled`)
     - `data-settle-scale`
     - `data-has-full-source`
     - `data-full-source-ready`
+    - `data-full-source-preparing`
+    - `data-full-source-status` (`none`, `loading`, `preparing`, `settling`, `ready`)
 
 Image tab strip:
 - exactly 3 canonical image thumbnails
@@ -251,6 +254,7 @@ Fallback path:
 Quality strategy:
 - interactive render: scale `0.6`
 - settle render: runs after `260ms` debounce with capped max source dimension (`2400`) to preserve responsiveness while increasing resolved detail over preview-only rendering
+- full-source settle preparation prefers `createImageBitmap(..., { resizeWidth, resizeHeight })` and falls back to canvas downsampling when unavailable
 - settled frames may be restored from cache when key matches
 
 Uniform generation:
@@ -402,11 +406,14 @@ Root scripts:
 - `npm run calibration:oracle:index:check:camera-engine`
 - `npm run calibration:camera:oracle:import`
 - `npm run calibration:camera:oracle:import:dry-run`
+- `npm run calibration:camera:bootstrap`
+- `npm run calibration:camera:bootstrap:dry-run`
 - `npm run calibration:camera:oracle:check`
 - `npm run calibration:camera:run`
 - `npm run calibration:camera:baseline:check`
 - `npm run calibration:camera:baseline:lock`
 - `npm run calibration:camera:baseline:refresh`
+- `npm run calibration:camera:gate:validate`
 - `npm run calibration:camera:gate`
 - `npm run calibration:baseline:lock`
 - `npm run calibration:baseline:refresh`
@@ -427,6 +434,9 @@ Unit coverage highlights:
 - calibration harness record/evaluate flow now writes and validates oracle index contracts (`index.v1.json`) with scene/case hash integrity checks
 - calibration harness/source validator supports explicit oracle source policy gating (`--require-oracle-source camera_engine`) for camera-engine-only enforcement
 - camera-engine oracle import pipeline can build strict camera-source index contracts (`scripts/import-camera-oracle.mjs`) from exported scene/case JPEGs
+- camera bootstrap helper can source missing canonical scene files from approved metadata URLs and generate strict camera-oracle bootstrap assets end-to-end (`scripts/bootstrap-camera-calibration-assets.mjs`)
+- camera gate now validates camera baseline metadata policy/path consistency before running strict camera checks, supports preflight-only mode (`npm run calibration:camera:gate -- --validate-only`), and can skip redundant engine builds in CI (`--skip-build`)
+- engine integration tests now cover both camera gate validation contracts and camera-oracle import script success/failure paths
 
 ## 13. Explicit Known Gaps
 

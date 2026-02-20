@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "locked_at": "2026-02-20T00:23:22.009Z",
+  "locked_by_commit": "e59885b",
+  "source_metrics_path": "artifacts/calibration/runs/2026-02-20T00-23-04-933Z-evaluate-23f10898/metrics.json",
+  "baseline_metrics_path": "calibration/baseline/metrics.camera_engine.v1.json",
+  "source_run_timestamp": "2026-02-20T00:23:21.919Z",
+  "source_oracle_policy": "camera_engine",
+  "lock_require_oracle_source": "camera_engine",
+  "frame_count": 24,
+  "directional_axis_count": 7
+}

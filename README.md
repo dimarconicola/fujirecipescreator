@@ -83,11 +83,14 @@ npm run calibration:oracle:index:check
 npm run calibration:oracle:index:check:camera-engine
 npm run calibration:camera:oracle:import
 npm run calibration:camera:oracle:import:dry-run
+npm run calibration:camera:bootstrap
+npm run calibration:camera:bootstrap:dry-run
 npm run calibration:camera:oracle:check
 npm run calibration:camera:run
 npm run calibration:camera:baseline:check
 npm run calibration:camera:baseline:lock
 npm run calibration:camera:baseline:refresh
+npm run calibration:camera:gate:validate
 npm run calibration:camera:gate
 npm run calibration:baseline:lock
 npm run calibration:baseline:refresh
@@ -108,10 +111,13 @@ npm run test:acceptance
 - Calibration harness writes oracle index metadata (`artifacts/calibration/oracle-v1/index.v1.json`) for scene/case traceability.
 - Oracle source policy can be enforced in calibration runs (`--require-oracle-source camera_engine`) to block non-camera-engine oracle entries.
 - Camera-engine oracle workflow:
+  - bootstrap local camera-oracle assets from licensable scene sources and calibration record outputs via `npm run calibration:camera:bootstrap`
   - import camera exports into strict oracle index via `npm run calibration:camera:oracle:import`
   - validate strict policy via `npm run calibration:camera:oracle:check`
   - run evaluate path against camera oracle via `npm run calibration:camera:run`
-  - enforce release gate (oracle + baseline required) via `npm run calibration:camera:gate`
+  - enforce release gate (oracle + baseline + camera baseline metadata policy/path) via `npm run calibration:camera:gate`
+  - run gate preflight only (no evaluate execution) via `npm run calibration:camera:gate:validate` (or `npm run calibration:camera:gate -- --validate-only`)
+  - skip redundant engine rebuild in pre-built environments via `npm run calibration:camera:gate -- --skip-build`
 - CI strictness:
   - set repository variable `CAMERA_CALIBRATION_REQUIRED=true` to require camera gate on every CI run
 
