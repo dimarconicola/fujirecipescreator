@@ -144,7 +144,8 @@ Implementation:
  - CI behavior:
    - conditional mode: runs when camera artifacts exist
    - required mode: set repository variable `CAMERA_CALIBRATION_REQUIRED=true`
- - strict source mode: set repository variable `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`
+   - strict source mode: set repository variable `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`
+   - tuning-signal mode: set repository variable `CAMERA_TUNING_SIGNAL_REQUIRED=true` (runs `calibration:camera:tune:report` and fails low-signal bootstrap runs)
 
 14. `tune:report`
  - analyzes latest calibration metrics (or explicit `--metrics`) and writes `tuning-report.md`

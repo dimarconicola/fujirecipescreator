@@ -129,6 +129,7 @@ npm run test:acceptance
 - CI strictness:
   - set repository variable `CAMERA_CALIBRATION_REQUIRED=true` to require camera gate on every CI run
   - set repository variable `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true` to reject `*bootstrap*` oracle source tags in CI camera gate
+  - set repository variable `CAMERA_TUNING_SIGNAL_REQUIRED=true` to require camera tuning signal gate (`calibration:camera:tune:report`) and fail low-signal bootstrap-style calibration runs
 
 See:
 - `docs/engineering/technical-spec.md`

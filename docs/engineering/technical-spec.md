@@ -449,7 +449,7 @@ Unit coverage highlights:
 1. Full-source settle remains capped by an adaptive max settle dimension (`3200` default, `2400` low-resource devices) and does not yet run true uncapped full-resolution rendering for very large sources.
 2. Bundled LUT coverage is intentionally limited to manifest-approved, distributable assets; blocked entries are legal-only metadata and never loaded at runtime.
 3. CPU and WebGL paths are intentionally approximate and not bit-identical.
-4. Strict camera-oracle CI checks are conditional on presence of camera oracle/baseline artifacts (`artifacts/calibration/oracle-camera-engine-v1`, `calibration/baseline/metrics.camera_engine.v1.json`) unless repository variable `CAMERA_CALIBRATION_REQUIRED=true` is enabled; bootstrap-tag rejection can be enabled separately via `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`.
+4. Strict camera-oracle CI checks are conditional on presence of camera oracle/baseline artifacts (`artifacts/calibration/oracle-camera-engine-v1`, `calibration/baseline/metrics.camera_engine.v1.json`) unless repository variable `CAMERA_CALIBRATION_REQUIRED=true` is enabled; bootstrap-tag rejection can be enabled via `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`, and low-signal tuning-gate enforcement can be enabled via `CAMERA_TUNING_SIGNAL_REQUIRED=true`.
 
 ## 14. Research-Aligned V2 Direction (Proposed)
 

@@ -21,6 +21,7 @@ jobs:
     env:
       CAMERA_CALIBRATION_REQUIRED: ${{ vars.CAMERA_CALIBRATION_REQUIRED || 'false' }}
       CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP: ${{ vars.CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP || 'false' }}
+      CAMERA_TUNING_SIGNAL_REQUIRED: ${{ vars.CAMERA_TUNING_SIGNAL_REQUIRED || 'false' }}
 
     steps:
       - name: Checkout
@@ -68,6 +69,10 @@ jobs:
           else
             npm run calibration:camera:gate -- --skip-build
           fi
+
+      - name: Calibration Camera Tuning Signal Gate
+        if: ${{ env.CAMERA_TUNING_SIGNAL_REQUIRED == 'true' && (env.CAMERA_CALIBRATION_REQUIRED == 'true' || (hashFiles('artifacts/calibration/oracle-camera-engine-v1/index.v1.json') != '' && hashFiles('calibration/baseline/metrics.camera_engine.v1.json') != '' && hashFiles('calibration/baseline/metadata.camera_engine.v1.json') != '')) }}
+        run: npm run calibration:camera:tune:report
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
