@@ -39,6 +39,12 @@ async function writeJson(filePath: string, payload: unknown): Promise<void> {
 type CameraGateFixtureOptions = {
   baselinePolicy?: "camera_engine" | "any";
   metadataBaselineMetricsPath?: string;
+  oracleSourceType?: string;
+  oracleEntries?: Array<{
+    scene_id: string;
+    case_id: string;
+    source_type: string;
+  }>;
 };
 
 async function buildCameraGateFixture(options: CameraGateFixtureOptions = {}) {
@@ -57,8 +63,8 @@ async function buildCameraGateFixture(options: CameraGateFixtureOptions = {}) {
 
   await writeJson(oracleIndexPath, {
     version: 1,
-    source_type: "camera_engine_xrawstudio",
-    entries: [],
+    source_type: options.oracleSourceType ?? "camera_engine_xrawstudio",
+    entries: options.oracleEntries ?? [],
   });
   await writeJson(baselineMetricsPath, {
     aggregate: {},
@@ -145,5 +151,50 @@ describe("camera calibration gate script", () => {
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("does not match expected baseline metrics path");
+  });
+
+  it("fails when bootstrap-tagged index source is disallowed", async () => {
+    const fixture = await buildCameraGateFixture({
+      oracleSourceType: "camera_engine_bootstrap_seed",
+    });
+    const result = runCameraGateValidateOnly([
+      "--oracle-index",
+      fixture.oracleIndexPath,
+      "--baseline-metrics",
+      fixture.baselineMetricsPath,
+      "--baseline-metadata",
+      fixture.baselineMetadataPath,
+      "--disallow-bootstrap-source",
+    ]);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("bootstrap-tagged");
+    expect(result.stderr).toContain("disallowed");
+  });
+
+  it("fails when bootstrap-tagged entry sources are disallowed", async () => {
+    const fixture = await buildCameraGateFixture({
+      oracleSourceType: "camera_engine_xrawstudio",
+      oracleEntries: [
+        {
+          scene_id: "landscape_v1",
+          case_id: "baseline",
+          source_type: "camera_engine_bootstrap_seed",
+        },
+      ],
+    });
+    const result = runCameraGateValidateOnly([
+      "--oracle-index",
+      fixture.oracleIndexPath,
+      "--baseline-metrics",
+      fixture.baselineMetricsPath,
+      "--baseline-metadata",
+      fixture.baselineMetadataPath,
+      "--disallow-bootstrap-source",
+    ]);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("contains bootstrap-tagged entries");
+    expect(result.stderr).toContain("landscape_v1/baseline");
   });
 });

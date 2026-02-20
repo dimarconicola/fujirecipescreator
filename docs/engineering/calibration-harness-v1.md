@@ -35,7 +35,9 @@ Root scripts:
 15. `npm run calibration:camera:baseline:lock`
 16. `npm run calibration:camera:baseline:refresh`
 17. `npm run calibration:camera:gate:validate`
-18. `npm run calibration:camera:gate`
+18. `npm run calibration:camera:gate:validate:strict`
+19. `npm run calibration:camera:gate:strict`
+20. `npm run calibration:camera:gate`
 
 Implementation:
 
@@ -125,6 +127,9 @@ Implementation:
  - requires camera oracle index + camera baseline metrics to exist
  - requires camera baseline metadata (`calibration/baseline/metadata.camera_engine.v1.json`) to exist and match the expected baseline metrics path/policy
  - executes strict camera-source index check and strict camera baseline check in one command
+ - optional strict source hygiene gate:
+   - `npm run calibration:camera:gate -- --disallow-bootstrap-source`
+   - fails when index or entry source tags include `bootstrap`
  - supports validation-only mode for CI/ops preflight:
    - `npm run calibration:camera:gate -- --validate-only`
  - supports skipping engine rebuild when build already ran earlier in pipeline:
@@ -136,6 +141,7 @@ Implementation:
  - CI behavior:
    - conditional mode: runs when camera artifacts exist
    - required mode: set repository variable `CAMERA_CALIBRATION_REQUIRED=true`
+   - strict source mode: set repository variable `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`
 
 ## 4. Metrics (Current Bootstrap Set)
 
@@ -173,3 +179,4 @@ Baseline lock artifacts:
 
 1. Default calibration path remains bootstrap CPU-based; strict camera path is opt-in until camera oracle assets are available in repo/CI.
 2. CI runs strict camera checks conditionally unless `CAMERA_CALIBRATION_REQUIRED=true` is set.
+3. `--disallow-bootstrap-source` should be enabled only when true camera-engine export datasets replace bootstrap-seeded oracle entries.

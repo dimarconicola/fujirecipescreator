@@ -14,6 +14,7 @@ const DEFAULTS = Object.freeze({
   requireBaselinePolicy: "camera_engine",
   validateOnly: false,
   skipBuild: false,
+  disallowBootstrapSource: false,
 });
 
 function resolveFromRoot(relativeOrAbsolutePath) {
@@ -64,6 +65,10 @@ function parseArgs(argv) {
       options.skipBuild = true;
       continue;
     }
+    if (token === "--disallow-bootstrap-source") {
+      options.disallowBootstrapSource = true;
+      continue;
+    }
     throw new Error(`Unknown argument: ${token}`);
   }
 
@@ -79,6 +84,56 @@ function parseArgs(argv) {
   }
 
   return options;
+}
+
+function isBootstrapSourceType(sourceType) {
+  return typeof sourceType === "string" && sourceType.toLowerCase().includes("bootstrap");
+}
+
+function validateOracleBootstrapPolicy(indexPayload, disallowBootstrapSource) {
+  if (!disallowBootstrapSource) {
+    return {
+      blocked: false,
+      indexSourceType:
+        typeof indexPayload?.source_type === "string" ? indexPayload.source_type : null,
+      blockedEntries: [],
+    };
+  }
+
+  const indexSourceType =
+    typeof indexPayload?.source_type === "string" ? indexPayload.source_type : null;
+  if (isBootstrapSourceType(indexSourceType)) {
+    throw new Error(
+      `Camera oracle index source_type "${indexSourceType}" is bootstrap-tagged and disallowed by --disallow-bootstrap-source.`,
+    );
+  }
+
+  const entries = Array.isArray(indexPayload?.entries) ? indexPayload.entries : [];
+  const blockedEntries = [];
+  for (const entry of entries) {
+    const entrySourceType =
+      typeof entry?.source_type === "string" ? entry.source_type : null;
+    if (!isBootstrapSourceType(entrySourceType)) {
+      continue;
+    }
+    const sceneId =
+      typeof entry?.scene_id === "string" ? entry.scene_id : "unknown_scene";
+    const caseId = typeof entry?.case_id === "string" ? entry.case_id : "unknown_case";
+    blockedEntries.push(`${sceneId}/${caseId}:${entrySourceType}`);
+  }
+
+  if (blockedEntries.length > 0) {
+    const preview = blockedEntries.slice(0, 5).join(", ");
+    throw new Error(
+      `Camera oracle index contains bootstrap-tagged entries and is disallowed by --disallow-bootstrap-source (${blockedEntries.length} entries). Examples: ${preview}`,
+    );
+  }
+
+  return {
+    blocked: false,
+    indexSourceType,
+    blockedEntries: [],
+  };
 }
 
 async function assertExists(pathValue, label) {
@@ -175,10 +230,15 @@ async function run() {
   );
 
   const baselineMetadata = await readJson(baselineMetadataPath);
+  const oracleIndex = await readJson(oracleIndexPath);
   const baselineMetadataSummary = validateBaselineMetadata(
     baselineMetadata,
     baselineMetricsPath,
     options.requireBaselinePolicy,
+  );
+  const oracleBootstrapPolicySummary = validateOracleBootstrapPolicy(
+    oracleIndex,
+    options.disallowBootstrapSource,
   );
 
   if (!options.validateOnly) {
@@ -214,12 +274,14 @@ async function run() {
         pass: true,
         validate_only: options.validateOnly,
         skip_build: options.skipBuild,
+        disallow_bootstrap_source: options.disallowBootstrapSource,
         require_oracle_source: options.requireOracleSource,
         require_baseline_policy: options.requireBaselinePolicy,
         camera_oracle_index: relativeToRoot(oracleIndexPath),
         camera_baseline_metrics: relativeToRoot(baselineMetricsPath),
         camera_baseline_metadata: relativeToRoot(baselineMetadataPath),
         baseline_metadata: baselineMetadataSummary,
+        oracle_source_summary: oracleBootstrapPolicySummary,
       },
       null,
       2,

@@ -27,6 +27,8 @@
     "calibration:camera:baseline:lock": "node scripts/lock-calibration-baseline.mjs --target calibration/baseline/metrics.camera_engine.v1.json --metadata calibration/baseline/metadata.camera_engine.v1.json --require-oracle-source camera_engine",
     "calibration:camera:baseline:refresh": "npm run calibration:camera:run && npm run calibration:camera:baseline:lock",
     "calibration:camera:gate:validate": "node scripts/run-camera-calibration-gate.mjs --validate-only",
+    "calibration:camera:gate:validate:strict": "node scripts/run-camera-calibration-gate.mjs --validate-only --disallow-bootstrap-source",
+    "calibration:camera:gate:strict": "node scripts/run-camera-calibration-gate.mjs --disallow-bootstrap-source",
     "calibration:camera:gate": "node scripts/run-camera-calibration-gate.mjs",
     "calibration:baseline:lock": "node scripts/lock-calibration-baseline.mjs",
     "calibration:baseline:refresh": "npm run calibration:dry-run && npm run calibration:baseline:lock",

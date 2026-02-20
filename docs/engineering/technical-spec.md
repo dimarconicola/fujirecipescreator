@@ -414,6 +414,8 @@ Root scripts:
 - `npm run calibration:camera:baseline:lock`
 - `npm run calibration:camera:baseline:refresh`
 - `npm run calibration:camera:gate:validate`
+- `npm run calibration:camera:gate:validate:strict`
+- `npm run calibration:camera:gate:strict`
 - `npm run calibration:camera:gate`
 - `npm run calibration:baseline:lock`
 - `npm run calibration:baseline:refresh`
@@ -435,7 +437,7 @@ Unit coverage highlights:
 - calibration harness/source validator supports explicit oracle source policy gating (`--require-oracle-source camera_engine`) for camera-engine-only enforcement
 - camera-engine oracle import pipeline can build strict camera-source index contracts (`scripts/import-camera-oracle.mjs`) from exported scene/case JPEGs
 - camera bootstrap helper can source missing canonical scene files from approved metadata URLs and generate strict camera-oracle bootstrap assets end-to-end (`scripts/bootstrap-camera-calibration-assets.mjs`)
-- camera gate now validates camera baseline metadata policy/path consistency before running strict camera checks, supports preflight-only mode (`npm run calibration:camera:gate -- --validate-only`), and can skip redundant engine builds in CI (`--skip-build`)
+- camera gate now validates camera baseline metadata policy/path consistency before running strict camera checks, supports preflight-only mode (`npm run calibration:camera:gate -- --validate-only`), can skip redundant engine builds in CI (`--skip-build`), and can reject bootstrap-tagged source entries (`--disallow-bootstrap-source`)
 - engine integration tests now cover both camera gate validation contracts and camera-oracle import script success/failure paths
 
 ## 13. Explicit Known Gaps
@@ -443,7 +445,7 @@ Unit coverage highlights:
 1. Full-source settle is currently capped by a max settle dimension (`2400`) and does not yet run true uncapped full-resolution rendering for very large sources.
 2. Bundled LUT coverage is intentionally limited to manifest-approved, distributable assets; blocked entries are legal-only metadata and never loaded at runtime.
 3. CPU and WebGL paths are intentionally approximate and not bit-identical.
-4. Strict camera-oracle CI checks are conditional on presence of camera oracle/baseline artifacts (`artifacts/calibration/oracle-camera-engine-v1`, `calibration/baseline/metrics.camera_engine.v1.json`) unless repository variable `CAMERA_CALIBRATION_REQUIRED=true` is enabled.
+4. Strict camera-oracle CI checks are conditional on presence of camera oracle/baseline artifacts (`artifacts/calibration/oracle-camera-engine-v1`, `calibration/baseline/metrics.camera_engine.v1.json`) unless repository variable `CAMERA_CALIBRATION_REQUIRED=true` is enabled; bootstrap-tag rejection can be enabled separately via `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true`.
 
 ## 14. Research-Aligned V2 Direction (Proposed)
 

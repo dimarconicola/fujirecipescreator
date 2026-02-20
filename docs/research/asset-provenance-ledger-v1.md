@@ -38,6 +38,7 @@ Bootstrap camera-oracle seed:
 3. Generated outputs: scene/case calibration JPEG set under `artifacts/calibration/oracle-camera-engine-v1`.
 4. Source tag: `camera_engine_bootstrap_seed` (explicitly educational seed, not first-party camera-engine parity evidence).
 5. Approval: allowed for local CI/dev strict-gate bootstrapping only; not a replacement for true camera-engine export dataset in release accuracy claims.
+6. Release hardening option: enable `CAMERA_CALIBRATION_DISALLOW_BOOTSTRAP=true` in CI to reject bootstrap-tagged oracle source records.
 
 Release rule:
 1. Any new calibration image, LUT, or reference artifact must be added here before merge.
